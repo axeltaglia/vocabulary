@@ -1,0 +1,10 @@
+{
+  "apiPort": ":8085",
+  "dbConfig": {
+    "host": "postgres",
+    "port": "5435",
+    "user": "vocabulary",
+    "password": "vocabulary",
+    "database": "vocabulary"
+  }
+}

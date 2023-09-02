@@ -1,0 +1,39 @@
+version: '3.9'
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - APP_ENV=docker
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: vocabulary
+      POSTGRES_PASSWORD: vocabulary
+      POSTGRES_DB: vocabulary
+      DATABASE_HOST: postgres
+      PGPORT: 5435
+      PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/15/bin
+    volumes:
+      - ./dbData:/var/lib/postgresql/data
+    ports:
+      - "5435:5435"
+    restart: no
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    environment:
+      - BACKEND_HOST=localhost
+      - BACKEND_PORT=8085
+    ports:
+      - "3005:3000"
+    depends_on:
+      - backend
