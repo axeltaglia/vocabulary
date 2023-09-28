@@ -19,12 +19,10 @@ services:
       POSTGRES_DB: vocabulary
       DATABASE_HOST: postgres
       PGPORT: 5435
-      PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/15/bin
     volumes:
       - ./dbData:/var/lib/postgresql/data
     ports:
       - "5435:5435"
-    restart: no
 
   ui:
     build:
