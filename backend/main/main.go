@@ -43,6 +43,7 @@ func main() {
 	util.CheckErr(err)
 }
 
+// Los valores de estas variables las tenes que leer del environment del sistema operativo. 
 type DbConfig struct {
 	Host     string `json:"host"`
 	Port     string `json:"port"`
@@ -51,6 +52,7 @@ type DbConfig struct {
 	Database string `json:"database"`
 }
 
+// Los valores de estas variables las tenes que leer del environment del sistema operativo. 
 type Config struct {
 	ApiPort  string   `json:"apiPort"`
 	DbConfig DbConfig `json:"dbConfig"`
