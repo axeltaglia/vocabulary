@@ -29,8 +29,8 @@ services:
       context: ./ui
       dockerfile: Dockerfile
     environment:
-      - BACKEND_HOST: "localhost"
-      - BACKEND_PORT: "8085"
+      - BACKEND_HOST=localhost
+      - BACKEND_PORT=8085
     ports:
       - "3005:3000"
     depends_on:

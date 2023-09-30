@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -36,7 +35,7 @@ func main() {
 	util.CheckErr(err)
 }
 
-// Los valores de estas variables las tenes que leer del environment del sistema operativo. 
+// Los valores de estas variables las tenes que leer del environment del sistema operativo.
 type DbConfig struct {
 	Host     string `json:"host"`
 	Port     string `json:"port"`
@@ -45,27 +44,11 @@ type DbConfig struct {
 	Database string `json:"database"`
 }
 
-// Los valores de estas variables las tenes que leer del environment del sistema operativo. 
 type Config struct {
 	ApiPort  string   `json:"apiPort"`
 	DbConfig DbConfig `json:"dbConfig"`
 }
 
-func loadConfig2(filename string) Config {
-	var config Config
-
-	configFile, err := os.ReadFile(filename)
-	if err != nil {
-		log.Fatal("Error reading env.json:", err)
-	}
-
-	err = json.Unmarshal(configFile, &config)
-	if err != nil {
-		log.Fatal("Error parsing env.json:", err)
-	}
-
-	return config
-}
 func initDb(dbConfig DbConfig) *gorm.DB {
 	maxAttempts := 30
 	attempt := 1
