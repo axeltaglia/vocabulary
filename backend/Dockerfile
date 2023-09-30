@@ -1,4 +1,4 @@
-FROM golang
+FROM golang:alpine3.18
 
 # aca tenes que declarar las variables de environment que usas dentro de la aplicacion, por ejemplo el user pass de la base de datos
 ARG DBUSER

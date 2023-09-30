@@ -19,18 +19,6 @@ import (
 
 // docker run --name pg_vocabulary_ctn -e POSTGRES_USER=vocabulary -e POSTGRES_PASSWORD=vocabulary -e POSTGRES_DB=vocabulary -e PGPORT=5435 -p 5435:5435 -v dbData:/var/lib/postgresql/data -d postgres
 func main() {
-	/*
-		env := os.Getenv("APP_ENV")
-
-		var configFileName string
-		if env == "docker" {
-			configFileName = "docker-env.json"
-		} else {
-			configFileName = "local-env.json"
-		}
-
-	*/
-
 	config, errConf := loadConfig("conf.json")
 	util.CheckErr(errConf)
 	db := initDb(config.DbConfig)

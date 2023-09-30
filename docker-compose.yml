@@ -4,11 +4,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    environment:
-      APP_ENV: "docker"
-      DBUSER: "user"
-      DBPASS: "asd"
-      DBHOST: "postgres" # este nombre es el del servicio de postgres. Ese es el endpoint
+    env_file:
+      - .env
     ports:
       - "8085:8085"
     depends_on:
@@ -32,8 +29,8 @@ services:
       context: ./ui
       dockerfile: Dockerfile
     environment:
-      - BACKEND_HOST: localhost
-      - BACKEND_PORT: 8085
+      - BACKEND_HOST: "localhost"
+      - BACKEND_PORT: "8085"
     ports:
       - "3005:3000"
     depends_on:
