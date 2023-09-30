@@ -1,5 +1,5 @@
-backend/local-env.json
 *.iml
 ui/node_modules/
 ui/build
 .idea/
+.env

@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 	"vocabulary/modules"
 	"vocabulary/services"
@@ -18,16 +19,20 @@ import (
 
 // docker run --name pg_vocabulary_ctn -e POSTGRES_USER=vocabulary -e POSTGRES_PASSWORD=vocabulary -e POSTGRES_DB=vocabulary -e PGPORT=5435 -p 5435:5435 -v dbData:/var/lib/postgresql/data -d postgres
 func main() {
-	env := os.Getenv("APP_ENV")
+	/*
+		env := os.Getenv("APP_ENV")
 
-	var configFileName string
-	if env == "docker" {
-		configFileName = "docker-env.json"
-	} else {
-		configFileName = "local-env.json"
-	}
+		var configFileName string
+		if env == "docker" {
+			configFileName = "docker-env.json"
+		} else {
+			configFileName = "local-env.json"
+		}
 
-	config := loadConfig(configFileName)
+	*/
+
+	config, errConf := loadConfig("conf.json")
+	util.CheckErr(errConf)
 	db := initDb(config.DbConfig)
 	router := gin.Default()
 
@@ -39,7 +44,7 @@ func main() {
 	endpoints := services.NewEndpoints(router, db)
 	endpoints.Handle()
 
-	err := http.ListenAndServe(config.ApiPort, router)
+	err := http.ListenAndServe(":"+config.ApiPort, router)
 	util.CheckErr(err)
 }
 
@@ -58,7 +63,7 @@ type Config struct {
 	DbConfig DbConfig `json:"dbConfig"`
 }
 
-func loadConfig(filename string) Config {
+func loadConfig2(filename string) Config {
 	var config Config
 
 	configFile, err := os.ReadFile(filename)
@@ -101,4 +106,57 @@ func initDb(dbConfig DbConfig) *gorm.DB {
 		fmt.Println("Retrying in 1 second...")
 		time.Sleep(1 * time.Second)
 	}
+}
+
+func loadConfig(configFileName string) (*Config, error) {
+	// Read the env.json file
+	file, err := os.ReadFile(configFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal JSON into a map[string]interface{}
+	var placeholders map[string]interface{}
+	err = json.Unmarshal(file, &placeholders)
+	if err != nil {
+		return nil, err
+	}
+
+	// Replace placeholders with environment variables
+	replacedPlaceholders := replacePlaceholders(placeholders)
+
+	// Marshal the updated placeholders back to JSON
+	updatedJSON, err := json.Marshal(replacedPlaceholders)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal JSON into the Config struct
+	var config Config
+	err = json.Unmarshal(updatedJSON, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func replacePlaceholders(data interface{}) interface{} {
+	switch v := data.(type) {
+	case map[string]interface{}:
+		for key, val := range v {
+			v[key] = replacePlaceholders(val)
+		}
+	case string:
+		if strings.HasPrefix(v, "{{.") && strings.HasSuffix(v, "}}") {
+			envVar := strings.TrimPrefix(strings.TrimSuffix(v, "}}"), "{{.")
+			replacedValue := os.Getenv(envVar)
+			if replacedValue == "" {
+				// If the environment variable is not set, keep the placeholder
+				return v
+			}
+			return replacedValue
+		}
+	}
+	return data
 }
