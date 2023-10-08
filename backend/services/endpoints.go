@@ -136,7 +136,7 @@ func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, tx *gorm.DB) 
 
 func (o *Endpoints) getCategories(c *gin.Context, tx *gorm.DB) {
 	var categories []modules.Category
-	tx.Order("name").Find(&categories)
+	tx.Order("created_at DESC").Find(&categories)
 
 	c.JSON(http.StatusOK, categories)
 }

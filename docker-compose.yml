@@ -31,6 +31,11 @@ services:
     environment:
       - BACKEND_HOST=localhost
       - BACKEND_PORT=8085
+    volumes:
+      - ./ui:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
     ports:
       - "3005:3000"
     depends_on:

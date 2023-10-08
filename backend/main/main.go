@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -56,6 +57,7 @@ func initDb(dbConfig DbConfig) *gorm.DB {
 		var db *gorm.DB
 		var err error
 		args := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Password)
+		log.Println(args)
 		db, err = gorm.Open("postgres", args)
 		if err == nil {
 			// AutoMigrate both Vocabulary and VocabularyCategory models
