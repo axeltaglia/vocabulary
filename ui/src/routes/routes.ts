@@ -1,5 +1,6 @@
 import React from "react"
 import Home from "../pages/Home";
+import Categories from "../pages/Categories";
 
 type RouteType = {
     key: string
@@ -18,5 +19,13 @@ export const routes: RouteType[] = [
         authenticated: false,
         enabled: true,
         component: Home
+    },
+    {
+        key: 'category-route',
+        title: 'Category',
+        path: '/categories',
+        authenticated: false,
+        enabled: true,
+        component: Categories
     }
 ]
