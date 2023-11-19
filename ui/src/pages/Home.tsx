@@ -17,20 +17,14 @@ function Home() {
         openCreateVocabularyDialog
     } = useVocabulary()
 
-    useEffect(() => {
-        getVocabularies()
-            .then(() => {
-            })
-        getCategories()
-            .then(() => {
-            })
-    }, [])
-
-
-
     const handleNewVocabularyButtonClick = () => {
         openCreateVocabularyDialog()
     }
+
+    useEffect(() => {
+        getVocabularies();
+        getCategories();
+    }, [])
 
     return <>
         <Box sx={{ display: 'flex' }}>

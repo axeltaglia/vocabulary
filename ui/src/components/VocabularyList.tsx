@@ -37,7 +37,7 @@ export default function VocabularyList() {
             flex: 1,
             renderCell: (params) => (
                 <div className="custom-cell">
-                    {params.row.usedInPhrase.length > 180 ? (
+                    {params.row.usedInPhrase?.length > 180 ? (
                         <>
                             {params.row.usedInPhrase.slice(0, 180)}...
                         </>
@@ -69,12 +69,10 @@ export default function VocabularyList() {
     ];
 
     const handleWordsClick = async (id: number) => {
-        await getVocabularyCategories(id)
         openUpdateVocabularyDialog(id)
     }
 
     const handleEdit = async (id: number) => {
-        await getVocabularyCategories(id)
         openUpdateVocabularyDialog(id)
     };
 
