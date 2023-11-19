@@ -106,3 +106,19 @@ func (o *GetVocabularyCategoriesResponse) MapFromEntities(entityCategories []Voc
 
 	o.Categories = categories
 }
+
+type GetCategoriesResponse struct {
+	Categories []Category `json:"categories"`
+}
+
+func (o *GetCategoriesResponse) MapFromEntities(entityCategories []VocabularyEntity.Category) {
+	var categories []Category
+	for _, entityCategory := range entityCategories {
+		categories = append(categories, Category{
+			Id:   entityCategory.Id,
+			Name: entityCategory.Name,
+		})
+	}
+
+	o.Categories = categories
+}

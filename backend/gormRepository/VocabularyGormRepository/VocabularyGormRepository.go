@@ -75,6 +75,12 @@ func (o Repository) FindVocabularyById(id uint) VocabularyEntity.Vocabulary {
 	return dbVocabulary.mapVocabularyToEntity()
 }
 
+func (o Repository) FindCategories() []VocabularyEntity.Category {
+	var dbCategories []*Category
+	o.tx.Order("created_at DESC").Find(&dbCategories)
+	return mapCategoriesToEntities(dbCategories)
+}
+
 func mapVocabulariesToEntities(dbVocabularies []Vocabulary, vocabularies []VocabularyEntity.Vocabulary) []VocabularyEntity.Vocabulary {
 	for _, dbVocabulary := range dbVocabularies {
 		vocabularies = append(vocabularies, VocabularyEntity.Vocabulary{

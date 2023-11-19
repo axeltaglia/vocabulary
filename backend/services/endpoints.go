@@ -77,6 +77,16 @@ func (o *Endpoints) getVocabularyCategories(c *gin.Context, tx *gorm.DB) {
 	c.JSON(http.StatusOK, getVocabularyCategoriesResponse.Categories)
 }
 
+func (o *Endpoints) getCategories(c *gin.Context, tx *gorm.DB) {
+	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
+	entityCategories := vocabularyEntity.GetAllCategories()
+
+	var getCategoriesResponse GetCategoriesResponse
+	getCategoriesResponse.MapFromEntities(entityCategories)
+
+	c.JSON(http.StatusOK, getCategoriesResponse.Categories)
+}
+
 /*
 
 func (o *Endpoints) getVocabularyCategories(c *gin.Context, tx *gorm.DB) {
@@ -190,7 +200,7 @@ func (o *Endpoints) handle() {
 	//o.handleWithTx("/updateVocabularyWithCategories/:id", o.updateVocabularyWithCategories)
 	//o.handleWithTx("/deleteVocabulary/:id", o.deleteVocabulary)
 	//o.handleWithTx("/createVocabularyWithCategories", o.createVocabularyWithCategories)
-	//o.handleWithTx("/getCategories", o.getCategories)
+	o.handleWithTx("/getCategories", o.getCategories)
 }
 
 func (o *Endpoints) handleWithTx(relativePath string, f func(c *gin.Context, tx *gorm.DB)) {
