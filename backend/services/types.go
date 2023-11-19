@@ -90,3 +90,19 @@ type VocabularyWithCategories struct {
 	Vocabulary VocabularyEntity.Vocabulary `json:"vocabulary"`
 	Categories []string                    `json:"categories"`
 }
+
+type GetVocabularyCategoriesResponse struct {
+	Categories []Category `json:"categories"`
+}
+
+func (o *GetVocabularyCategoriesResponse) MapFromEntities(entityCategories []VocabularyEntity.Category) {
+	var categories []Category
+	for _, entityCategory := range entityCategories {
+		categories = append(categories, Category{
+			Id:   entityCategory.Id,
+			Name: entityCategory.Name,
+		})
+	}
+
+	o.Categories = categories
+}

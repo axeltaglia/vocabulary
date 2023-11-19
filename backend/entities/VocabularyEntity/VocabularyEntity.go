@@ -51,6 +51,11 @@ func (o Entity) GetVocabulary(id uint) Vocabulary {
 	return o.Repository.FindVocabularyById(id)
 }
 
+func (o Entity) GetCategoriesFromVocabulary(vocabularyId uint) []Category {
+	vocabulary := o.Repository.FindVocabularyById(vocabularyId)
+	return vocabulary.Categories
+}
+
 func New(repository VocabularyRepository) Entity {
 	return Entity{
 		Repository: repository,

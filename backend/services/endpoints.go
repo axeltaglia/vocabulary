@@ -49,7 +49,7 @@ func (o *Endpoints) getVocabulary(c *gin.Context, tx *gorm.DB) {
 	strId := c.Params.ByName("id")
 	id, err := strconv.ParseUint(strId, 10, 32)
 	if err != nil {
-		return
+		panic("Id must be a number")
 	}
 
 	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
@@ -58,7 +58,23 @@ func (o *Endpoints) getVocabulary(c *gin.Context, tx *gorm.DB) {
 	var response Vocabulary
 	response.MapFromEntity(vocabulary)
 
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusOK, response)
+}
+
+func (o *Endpoints) getVocabularyCategories(c *gin.Context, tx *gorm.DB) {
+	strId := c.Params.ByName("id")
+	id, err := strconv.ParseUint(strId, 10, 32)
+	if err != nil {
+		return
+	}
+
+	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
+	entityCategories := vocabularyEntity.GetCategoriesFromVocabulary(uint(id))
+
+	var getVocabularyCategoriesResponse GetVocabularyCategoriesResponse
+	getVocabularyCategoriesResponse.MapFromEntities(entityCategories)
+
+	c.JSON(http.StatusOK, getVocabularyCategoriesResponse.Categories)
 }
 
 /*
@@ -168,7 +184,7 @@ func (o *Endpoints) getCategories(c *gin.Context, tx *gorm.DB) {
 func (o *Endpoints) handle() {
 	o.handleWithTx("/getVocabularies", o.getVocabularies)
 	o.handleWithTx("/getVocabulary/:id", o.getVocabulary)
-	//o.handleWithTx("/getVocabularyCategories/:id", o.getVocabularyCategories)
+	o.handleWithTx("/getVocabularyCategories/:id", o.getVocabularyCategories)
 	o.handleWithTx("/createVocabulary", o.createVocabulary)
 	//o.handleWithTx("/updateVocabulary/:id", o.updateVocabulary)
 	//o.handleWithTx("/updateVocabularyWithCategories/:id", o.updateVocabularyWithCategories)
