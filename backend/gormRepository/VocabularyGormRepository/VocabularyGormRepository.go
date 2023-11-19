@@ -20,6 +20,19 @@ type Vocabulary struct {
 	UpdatedAt    *time.Time
 }
 
+func (o Vocabulary) mapVocabularyToEntity() VocabularyEntity.Vocabulary {
+	return VocabularyEntity.Vocabulary{
+		Id:           o.Id,
+		Words:        o.Words,
+		Translation:  o.Translation,
+		UsedInPhrase: o.UsedInPhrase,
+		Explanation:  o.Explanation,
+		Categories:   mapCategoriesToEntities(o.Categories),
+		CreatedAt:    o.CreatedAt,
+		UpdatedAt:    o.UpdatedAt,
+	}
+}
+
 type Category struct {
 	Id           *uint         `gorm:"primaryKey" json:"id"`
 	Name         *string       `json:"name" gorm:"unique;not null"`
@@ -44,7 +57,6 @@ func (o Repository) CreateVocabulary(vocabulary VocabularyEntity.Vocabulary) Voc
 
 func (o Repository) GetAllVocabulariesWithCategories() []VocabularyEntity.Vocabulary {
 	var dbVocabularies []Vocabulary
-	o.tx.LogMode(true)
 	err := o.tx.Model(&Vocabulary{}).Preload("Categories").Find(&dbVocabularies).Error
 	if err != nil {
 		panic(err)
@@ -54,6 +66,13 @@ func (o Repository) GetAllVocabulariesWithCategories() []VocabularyEntity.Vocabu
 	vocabularies = mapVocabulariesToEntities(dbVocabularies, vocabularies)
 
 	return vocabularies
+}
+
+func (o Repository) FindVocabularyById(id uint) VocabularyEntity.Vocabulary {
+	var dbVocabulary Vocabulary
+	o.tx.LogMode(true)
+	o.tx.Model(&Vocabulary{}).Preload("Categories").First(&dbVocabulary, id)
+	return dbVocabulary.mapVocabularyToEntity()
 }
 
 func mapVocabulariesToEntities(dbVocabularies []Vocabulary, vocabularies []VocabularyEntity.Vocabulary) []VocabularyEntity.Vocabulary {

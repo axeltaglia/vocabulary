@@ -26,6 +26,7 @@ type Category struct {
 type VocabularyRepository interface {
 	CreateVocabulary(vocabulary Vocabulary) Vocabulary
 	GetAllVocabulariesWithCategories() []Vocabulary
+	FindVocabularyById(id uint) Vocabulary
 }
 type Entity struct {
 	Repository VocabularyRepository
@@ -44,6 +45,10 @@ func (o Entity) Create(vocabulary Vocabulary) Vocabulary {
 
 func (o Entity) GetAllVocabulariesWithCategories() []Vocabulary {
 	return o.Repository.GetAllVocabulariesWithCategories()
+}
+
+func (o Entity) GetVocabulary(id uint) Vocabulary {
+	return o.Repository.FindVocabularyById(id)
 }
 
 func New(repository VocabularyRepository) Entity {

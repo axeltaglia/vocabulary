@@ -43,6 +43,17 @@ func (o *Vocabulary) MapFromEntity(vocabulary VocabularyEntity.Vocabulary) {
 	o.Translation = vocabulary.Translation
 	o.UsedInPhrase = vocabulary.UsedInPhrase
 	o.Explanation = vocabulary.Explanation
+	o.Categories = MapCategoriesFromEntity(vocabulary.Categories)
+}
+func MapCategoriesFromEntity(entityCategories []VocabularyEntity.Category) []Category {
+	var categories []Category
+	for _, entityCategory := range entityCategories {
+		categories = append(categories, Category{
+			Id:   entityCategory.Id,
+			Name: entityCategory.Name,
+		})
+	}
+	return categories
 }
 
 type Category struct {

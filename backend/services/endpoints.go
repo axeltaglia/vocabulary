@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"net/http"
+	"strconv"
 	"vocabulary/entities/VocabularyEntity"
 	"vocabulary/gormRepository/VocabularyGormRepository"
 )
@@ -41,28 +42,26 @@ func (o *Endpoints) getVocabularies(c *gin.Context, tx *gorm.DB) {
 	var getVocabulariesResponse GetVocabulariesResponse
 	getVocabulariesResponse.MapFromEntities(vocabularies)
 
-	c.JSON(http.StatusOK, getVocabulariesResponse)
-}
-
-/*
-func (o *Endpoints) getVocabularies(c *gin.Context, tx *gorm.DB) {
-	var vocabularies []Entity.Vocabulary
-	tx.Order("created_at DESC").Find(&vocabularies)
-
-	c.JSON(http.StatusOK, vocabularies)
+	c.JSON(http.StatusOK, getVocabulariesResponse.Vocabularies)
 }
 
 func (o *Endpoints) getVocabulary(c *gin.Context, tx *gorm.DB) {
-	id := c.Params.ByName("id")
-	var vocabulary Entity.Vocabulary
-	tx.First(&vocabulary, id)
-
-	if vocabulary.Id != 0 {
-		c.JSON(http.StatusOK, vocabulary)
-	} else {
-		c.AbortWithStatus(http.StatusNotFound)
+	strId := c.Params.ByName("id")
+	id, err := strconv.ParseUint(strId, 10, 32)
+	if err != nil {
+		return
 	}
+
+	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
+	vocabulary := vocabularyEntity.GetVocabulary(uint(id))
+
+	var response Vocabulary
+	response.MapFromEntity(vocabulary)
+
+	c.JSON(http.StatusCreated, response)
 }
+
+/*
 
 func (o *Endpoints) getVocabularyCategories(c *gin.Context, tx *gorm.DB) {
 	id := c.Params.ByName("id")
@@ -168,7 +167,7 @@ func (o *Endpoints) getCategories(c *gin.Context, tx *gorm.DB) {
 
 func (o *Endpoints) handle() {
 	o.handleWithTx("/getVocabularies", o.getVocabularies)
-	//o.handleWithTx("/getVocabulary/:id", o.getVocabulary)
+	o.handleWithTx("/getVocabulary/:id", o.getVocabulary)
 	//o.handleWithTx("/getVocabularyCategories/:id", o.getVocabularyCategories)
 	o.handleWithTx("/createVocabulary", o.createVocabulary)
 	//o.handleWithTx("/updateVocabulary/:id", o.updateVocabulary)
