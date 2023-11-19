@@ -54,8 +54,7 @@ export default function CategoryList() {
     }
 
     const handleEdit = async (id: number) => {
-        //await getVocabularyCategories(id)
-        //openUpdateVocabularyDialog(id)
+        //openUpdateCategoryDialog(id)
     };
 
     const handleDelete = (id: number) => {
