@@ -24,8 +24,8 @@ func InitDb(dbConfig DbConfig) *gorm.DB {
 		var db *gorm.DB
 		var err error
 		args := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Password)
-		log.Println(args)
 		db, err = gorm.Open("postgres", args)
+		log.Println(args)
 		if err == nil {
 			// AutoMigrate both Vocabulary and VocabularyCategory models
 			db.AutoMigrate(&VocabularyGormRepository.Vocabulary{})

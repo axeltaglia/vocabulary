@@ -57,7 +57,7 @@ func (o Repository) CreateVocabulary(vocabulary VocabularyEntity.Vocabulary) Voc
 
 func (o Repository) GetAllVocabulariesWithCategories() []VocabularyEntity.Vocabulary {
 	var dbVocabularies []Vocabulary
-	err := o.tx.Model(&Vocabulary{}).Preload("Categories").Find(&dbVocabularies).Error
+	err := o.tx.Model(&Vocabulary{}).Order("created_at desc").Preload("Categories").Find(&dbVocabularies).Error
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +70,6 @@ func (o Repository) GetAllVocabulariesWithCategories() []VocabularyEntity.Vocabu
 
 func (o Repository) FindVocabularyById(id uint) VocabularyEntity.Vocabulary {
 	var dbVocabulary Vocabulary
-	o.tx.LogMode(true)
 	o.tx.Model(&Vocabulary{}).Preload("Categories").First(&dbVocabulary, id)
 	return dbVocabulary.mapVocabularyToEntity()
 }
@@ -112,6 +111,7 @@ func mapCategoriesToEntities(dcCategories []*Category) []VocabularyEntity.Catego
 }
 
 func New(tx *gorm.DB) Repository {
+	//tx.LogMode(true)
 	return Repository{
 		tx: tx,
 	}

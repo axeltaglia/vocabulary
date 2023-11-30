@@ -3,30 +3,30 @@ package services
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"net/http"
 	"strconv"
+	"vocabulary/entities"
 	"vocabulary/entities/VocabularyEntity"
-	"vocabulary/gormRepository/VocabularyGormRepository"
 )
 
 type Endpoints struct {
-	router  *gin.Engine
-	db      *gorm.DB
-	apiPort string
+	router            *gin.Engine
+	apiPort           string
+	repositoryFactory entities.RepositoryFactory
 }
 
-func (o *Endpoints) createVocabulary(c *gin.Context, tx *gorm.DB) {
+func (o *Endpoints) createVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
 	var request CreateVocabularyRequest
-	err := c.BindJSON(&request)
-	if err != nil {
-		panic(err)
-	}
-	if !request.IsValid() {
-		panic("Words is mandatory")
+	if err := c.BindJSON(&request); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
 	}
 
-	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
+	if !request.IsValid() {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Words is mandatory"})
+		return
+	}
+
 	vocabulary := vocabularyEntity.Create(request.MapToEntity())
 
 	var response Vocabulary
@@ -35,8 +35,7 @@ func (o *Endpoints) createVocabulary(c *gin.Context, tx *gorm.DB) {
 	c.JSON(http.StatusCreated, response)
 }
 
-func (o *Endpoints) getVocabularies(c *gin.Context, tx *gorm.DB) {
-	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
+func (o *Endpoints) getVocabularies(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
 	vocabularies := vocabularyEntity.GetAllVocabulariesWithCategories()
 
 	var getVocabulariesResponse GetVocabulariesResponse
@@ -45,14 +44,13 @@ func (o *Endpoints) getVocabularies(c *gin.Context, tx *gorm.DB) {
 	c.JSON(http.StatusOK, getVocabulariesResponse.Vocabularies)
 }
 
-func (o *Endpoints) getVocabulary(c *gin.Context, tx *gorm.DB) {
+func (o *Endpoints) getVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
 	strId := c.Params.ByName("id")
 	id, err := strconv.ParseUint(strId, 10, 32)
 	if err != nil {
 		panic("Id must be a number")
 	}
 
-	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
 	vocabulary := vocabularyEntity.GetVocabulary(uint(id))
 
 	var response Vocabulary
@@ -61,14 +59,13 @@ func (o *Endpoints) getVocabulary(c *gin.Context, tx *gorm.DB) {
 	c.JSON(http.StatusOK, response)
 }
 
-func (o *Endpoints) getVocabularyCategories(c *gin.Context, tx *gorm.DB) {
+func (o *Endpoints) getVocabularyCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
 	strId := c.Params.ByName("id")
 	id, err := strconv.ParseUint(strId, 10, 32)
 	if err != nil {
 		return
 	}
 
-	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
 	entityCategories := vocabularyEntity.GetCategoriesFromVocabulary(uint(id))
 
 	var getVocabularyCategoriesResponse GetVocabularyCategoriesResponse
@@ -77,8 +74,7 @@ func (o *Endpoints) getVocabularyCategories(c *gin.Context, tx *gorm.DB) {
 	c.JSON(http.StatusOK, getVocabularyCategoriesResponse.Categories)
 }
 
-func (o *Endpoints) getCategories(c *gin.Context, tx *gorm.DB) {
-	vocabularyEntity := VocabularyEntity.New(VocabularyGormRepository.New(tx))
+func (o *Endpoints) getCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
 	entityCategories := vocabularyEntity.GetAllCategories()
 
 	var getCategoriesResponse GetCategoriesResponse
@@ -192,35 +188,37 @@ func (o *Endpoints) getCategories(c *gin.Context, tx *gorm.DB) {
 */
 
 func (o *Endpoints) handle() {
-	o.handleWithTx("/getVocabularies", o.getVocabularies)
-	o.handleWithTx("/getVocabulary/:id", o.getVocabulary)
-	o.handleWithTx("/getVocabularyCategories/:id", o.getVocabularyCategories)
-	o.handleWithTx("/createVocabulary", o.createVocabulary)
+	o.handleTxWithVocabularyEntity("/getVocabularies", o.getVocabularies)
+	o.handleTxWithVocabularyEntity("/getVocabulary/:id", o.getVocabulary)
+	o.handleTxWithVocabularyEntity("/getVocabularyCategories/:id", o.getVocabularyCategories)
+	o.handleTxWithVocabularyEntity("/createVocabulary", o.createVocabulary)
 	//o.handleWithTx("/updateVocabulary/:id", o.updateVocabulary)
 	//o.handleWithTx("/updateVocabularyWithCategories/:id", o.updateVocabularyWithCategories)
 	//o.handleWithTx("/deleteVocabulary/:id", o.deleteVocabulary)
 	//o.handleWithTx("/createVocabularyWithCategories", o.createVocabularyWithCategories)
-	o.handleWithTx("/getCategories", o.getCategories)
+	o.handleTxWithVocabularyEntity("/getCategories", o.getCategories)
 }
 
-func (o *Endpoints) handleWithTx(relativePath string, f func(c *gin.Context, tx *gorm.DB)) {
+func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *gin.Context, vocabularyEntity VocabularyEntity.Entity)) {
 	o.router.POST(relativePath, func(c *gin.Context) {
-		tx := o.db.Begin()
+		o.repositoryFactory.BeginTransaction()
 		defer func() {
 			if r := recover(); r != nil {
-				tx.Rollback()
+				o.repositoryFactory.RollbackTransaction()
 				panic(r)
 			}
 		}()
 
-		f(c, tx)
+		vocabularyRepository := o.repositoryFactory.GetVocabularyRepository()
+		vocabularyEntity := VocabularyEntity.New(vocabularyRepository)
+		f(c, vocabularyEntity)
 
-		if tx.Error != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database transaction failed"})
-		} else {
-			tx.Commit()
-		}
+		//if tx.Error != nil {
+		//tx.Rollback()
+		//c.JSON(http.StatusInternalServerError, gin.H{"error": "Database transaction failed"})
+		//} else {
+		o.repositoryFactory.CommitTransaction()
+		//}
 	})
 }
 
@@ -232,15 +230,15 @@ func (o *Endpoints) ListenAndServe() {
 	}
 }
 
-func NewEndpoints(apiPort string, db *gorm.DB) *Endpoints {
+func NewEndpoints(apiPort string, repositoryFactory entities.RepositoryFactory) *Endpoints {
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept"}
 	router.Use(cors.New(corsConfig))
 	return &Endpoints{
-		apiPort: apiPort,
-		router:  router,
-		db:      db,
+		apiPort:           apiPort,
+		router:            router,
+		repositoryFactory: repositoryFactory,
 	}
 }
