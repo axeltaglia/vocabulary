@@ -28,6 +28,14 @@ func (o *GormTxRepositoryFactory) CommitTransaction() {
 	o.tx.Commit()
 }
 
+func (o *GormTxRepositoryFactory) TransactionError() *string {
+	if o.tx.Error != nil {
+		errMsg := o.tx.Error.Error()
+		return &errMsg
+	}
+	return nil
+}
+
 func (o *GormTxRepositoryFactory) RollbackTransaction() {
 	o.tx.Rollback()
 }

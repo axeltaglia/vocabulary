@@ -213,12 +213,12 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 		vocabularyEntity := VocabularyEntity.New(vocabularyRepository)
 		f(c, vocabularyEntity)
 
-		//if tx.Error != nil {
-		//tx.Rollback()
-		//c.JSON(http.StatusInternalServerError, gin.H{"error": "Database transaction failed"})
-		//} else {
-		txRepositoryFactory.CommitTransaction()
-		//}
+		if txRepositoryFactory.TransactionError() != nil {
+			txRepositoryFactory.RollbackTransaction()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database transaction failed"})
+		} else {
+			txRepositoryFactory.CommitTransaction()
+		}
 	})
 }
 

@@ -11,5 +11,6 @@ type TxRepositoryHandler interface {
 type TxRepositoryFactory interface {
 	CommitTransaction()
 	RollbackTransaction()
+	TransactionError() *string
 	GetVocabularyRepository() VocabularyEntity.VocabularyRepository
 }
