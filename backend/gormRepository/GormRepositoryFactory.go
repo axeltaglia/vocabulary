@@ -2,42 +2,45 @@ package gormRepository
 
 import (
 	"github.com/jinzhu/gorm"
+	"vocabulary/entities"
 	"vocabulary/entities/VocabularyEntity"
 	"vocabulary/gormRepository/VocabularyGormRepository"
 )
 
-type Factory struct {
+type GormTxRepositoryHandler struct {
 	db *gorm.DB
+}
+
+func (o *GormTxRepositoryHandler) GetTxRepositoryFactory() entities.TxRepositoryFactory {
+	newTx := o.db.Begin()
+	return &GormTxRepositoryFactory{tx: newTx}
+}
+
+func NewGormTxRepositoryHandler(db *gorm.DB) *GormTxRepositoryHandler {
+	return &GormTxRepositoryHandler{db: db}
+}
+
+type GormTxRepositoryFactory struct {
 	tx *gorm.DB
 }
 
-func (o *Factory) BeginTransaction() {
-	o.tx = o.db.Begin()
-}
-
-func (o *Factory) CommitTransaction() {
+func (o *GormTxRepositoryFactory) CommitTransaction() {
 	o.checkTx()
-	//o.tx.Commit()
+	o.tx.Commit()
 }
 
-func (o *Factory) RollbackTransaction() {
+func (o *GormTxRepositoryFactory) RollbackTransaction() {
 	o.checkTx()
 	o.tx.Rollback()
 }
 
-func (o *Factory) GetVocabularyRepository() VocabularyEntity.VocabularyRepository {
+func (o *GormTxRepositoryFactory) GetVocabularyRepository() VocabularyEntity.VocabularyRepository {
 	o.checkTx()
 	return VocabularyGormRepository.New(o.tx)
 }
 
-func (o *Factory) checkTx() {
+func (o *GormTxRepositoryFactory) checkTx() {
 	if o.tx == nil {
 		panic("First start the transaction")
-	}
-}
-
-func NewFactory(db *gorm.DB) *Factory {
-	return &Factory{
-		db: db,
 	}
 }

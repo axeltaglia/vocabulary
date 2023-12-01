@@ -1,9 +1,14 @@
 package entities
 
-import "vocabulary/entities/VocabularyEntity"
+import (
+	"vocabulary/entities/VocabularyEntity"
+)
 
-type RepositoryFactory interface {
-	BeginTransaction()
+type TxRepositoryHandler interface {
+	GetTxRepositoryFactory() TxRepositoryFactory
+}
+
+type TxRepositoryFactory interface {
 	CommitTransaction()
 	RollbackTransaction()
 	GetVocabularyRepository() VocabularyEntity.VocabularyRepository

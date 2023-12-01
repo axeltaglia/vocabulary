@@ -14,8 +14,9 @@ func main() {
 		panic(err)
 	}
 	db := gormRepository.InitDb(config.DbConfig)
-	gormRepositoryFactory := gormRepository.NewFactory(db)
 
-	endpoints := services.NewEndpoints(config.ApiPort, gormRepositoryFactory)
+	gormTxRepositoryHandler := gormRepository.NewGormTxRepositoryHandler(db)
+
+	endpoints := services.NewEndpoints(config.ApiPort, gormTxRepositoryHandler)
 	endpoints.ListenAndServe()
 }

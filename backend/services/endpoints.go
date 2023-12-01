@@ -10,9 +10,9 @@ import (
 )
 
 type Endpoints struct {
-	router            *gin.Engine
-	apiPort           string
-	repositoryFactory entities.RepositoryFactory
+	router              *gin.Engine
+	apiPort             string
+	txRepositoryHandler entities.TxRepositoryHandler
 }
 
 func (o *Endpoints) createVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
@@ -201,15 +201,16 @@ func (o *Endpoints) handle() {
 
 func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *gin.Context, vocabularyEntity VocabularyEntity.Entity)) {
 	o.router.POST(relativePath, func(c *gin.Context) {
-		o.repositoryFactory.BeginTransaction()
+		txRepositoryFactory := o.txRepositoryHandler.GetTxRepositoryFactory()
+
 		defer func() {
 			if r := recover(); r != nil {
-				o.repositoryFactory.RollbackTransaction()
+				txRepositoryFactory.RollbackTransaction()
 				panic(r)
 			}
 		}()
 
-		vocabularyRepository := o.repositoryFactory.GetVocabularyRepository()
+		vocabularyRepository := txRepositoryFactory.GetVocabularyRepository()
 		vocabularyEntity := VocabularyEntity.New(vocabularyRepository)
 		f(c, vocabularyEntity)
 
@@ -217,7 +218,7 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 		//tx.Rollback()
 		//c.JSON(http.StatusInternalServerError, gin.H{"error": "Database transaction failed"})
 		//} else {
-		o.repositoryFactory.CommitTransaction()
+		txRepositoryFactory.CommitTransaction()
 		//}
 	})
 }
@@ -230,15 +231,15 @@ func (o *Endpoints) ListenAndServe() {
 	}
 }
 
-func NewEndpoints(apiPort string, repositoryFactory entities.RepositoryFactory) *Endpoints {
+func NewEndpoints(apiPort string, txRepositoryHandler entities.TxRepositoryHandler) *Endpoints {
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept"}
 	router.Use(cors.New(corsConfig))
 	return &Endpoints{
-		apiPort:           apiPort,
-		router:            router,
-		repositoryFactory: repositoryFactory,
+		apiPort:             apiPort,
+		router:              router,
+		txRepositoryHandler: txRepositoryHandler,
 	}
 }
