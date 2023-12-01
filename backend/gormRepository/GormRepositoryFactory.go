@@ -25,22 +25,13 @@ type GormTxRepositoryFactory struct {
 }
 
 func (o *GormTxRepositoryFactory) CommitTransaction() {
-	o.checkTx()
 	o.tx.Commit()
 }
 
 func (o *GormTxRepositoryFactory) RollbackTransaction() {
-	o.checkTx()
 	o.tx.Rollback()
 }
 
 func (o *GormTxRepositoryFactory) GetVocabularyRepository() VocabularyEntity.VocabularyRepository {
-	o.checkTx()
 	return VocabularyGormRepository.New(o.tx)
-}
-
-func (o *GormTxRepositoryFactory) checkTx() {
-	if o.tx == nil {
-		panic("First start the transaction")
-	}
 }

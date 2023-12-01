@@ -11,7 +11,6 @@ import (
 
 type Endpoints struct {
 	router              *gin.Engine
-	apiPort             string
 	txRepositoryHandler entities.TxRepositoryHandler
 }
 
@@ -223,22 +222,21 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 	})
 }
 
-func (o *Endpoints) ListenAndServe() {
+func (o *Endpoints) ListenAndServe(apiPort string) {
 	o.handle()
-	err := http.ListenAndServe(":"+o.apiPort, o.router)
+	err := http.ListenAndServe(":"+apiPort, o.router)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewEndpoints(apiPort string, txRepositoryHandler entities.TxRepositoryHandler) *Endpoints {
+func NewEndpoints(txRepositoryHandler entities.TxRepositoryHandler) *Endpoints {
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept"}
 	router.Use(cors.New(corsConfig))
 	return &Endpoints{
-		apiPort:             apiPort,
 		router:              router,
 		txRepositoryHandler: txRepositoryHandler,
 	}
