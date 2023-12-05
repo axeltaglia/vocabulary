@@ -55,6 +55,45 @@ func (o Repository) CreateVocabulary(vocabulary VocabularyEntity.Vocabulary) Voc
 	return vocabulary
 }
 
+func (o Repository) UpdateVocabulary(vocabulary VocabularyEntity.Vocabulary) VocabularyEntity.Vocabulary {
+	gormVocabulary := Vocabulary{
+		Id:           vocabulary.Id,
+		Words:        vocabulary.Words,
+		Translation:  vocabulary.Translation,
+		UsedInPhrase: vocabulary.UsedInPhrase,
+		Explanation:  vocabulary.Explanation,
+	}
+	o.tx.Update(&gormVocabulary)
+	vocabulary.UpdatedAt = gormVocabulary.UpdatedAt
+	return vocabulary
+}
+
+func (o Repository) UpdateVocabularyWithCategories(vocabulary VocabularyEntity.Vocabulary, categories []string) {
+	var dbVocabulary Vocabulary
+	o.tx.Model(&Vocabulary{}).First(&dbVocabulary, vocabulary.Id)
+	if dbVocabulary.Id != nil {
+		gormVocabulary := Vocabulary{
+			Id:           vocabulary.Id,
+			Words:        vocabulary.Words,
+			Translation:  vocabulary.Translation,
+			UsedInPhrase: vocabulary.UsedInPhrase,
+			Explanation:  vocabulary.Explanation,
+		}
+		o.tx.Update(&gormVocabulary)
+
+		o.tx.Model(vocabulary).Association("Categories").Clear()
+
+		for _, categoryName := range categories {
+			dbCategory := Category{}
+			if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; err != nil {
+				dbCategory = Category{Name: &categoryName}
+				o.tx.Create(&dbCategory)
+			}
+			o.tx.Model(vocabulary).Association("Categories").Append(dbCategory)
+		}
+	}
+}
+
 func (o Repository) GetAllVocabulariesWithCategories() []VocabularyEntity.Vocabulary {
 	var dbVocabularies []Vocabulary
 	err := o.tx.Model(&Vocabulary{}).Order("created_at desc").Preload("Categories").Find(&dbVocabularies).Error

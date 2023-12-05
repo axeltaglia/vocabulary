@@ -28,6 +28,8 @@ type VocabularyRepository interface {
 	GetAllVocabulariesWithCategories() []Vocabulary
 	FindVocabularyById(id uint) Vocabulary
 	FindCategories() []Category
+	UpdateVocabulary(vocabulary Vocabulary) Vocabulary
+	UpdateVocabularyWithCategories(Vocabulary, []string)
 }
 type Entity struct {
 	Repository VocabularyRepository
@@ -60,6 +62,14 @@ func (o Entity) GetCategoriesFromVocabulary(vocabularyId uint) []Category {
 func (o Entity) GetAllCategories() []Category {
 	categories := o.Repository.FindCategories()
 	return categories
+}
+
+func (o Entity) Update(vocabulary Vocabulary) Vocabulary {
+	return o.Repository.UpdateVocabulary(vocabulary)
+}
+
+func (o Entity) UpdateWithCategories(vocabulary Vocabulary, categories []string) {
+	o.Repository.UpdateVocabularyWithCategories(vocabulary, categories)
 }
 
 func New(repository VocabularyRepository) Entity {

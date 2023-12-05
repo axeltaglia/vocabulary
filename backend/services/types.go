@@ -45,6 +45,17 @@ func (o *Vocabulary) MapFromEntity(vocabulary VocabularyEntity.Vocabulary) {
 	o.Explanation = vocabulary.Explanation
 	o.Categories = MapCategoriesFromEntity(vocabulary.Categories)
 }
+
+func (o *Vocabulary) MapToEntity() VocabularyEntity.Vocabulary {
+	return VocabularyEntity.Vocabulary{
+		Id:           o.Id,
+		Words:        o.Words,
+		Translation:  o.Translation,
+		UsedInPhrase: o.UsedInPhrase,
+		Explanation:  o.Explanation,
+	}
+}
+
 func MapCategoriesFromEntity(entityCategories []VocabularyEntity.Category) []Category {
 	var categories []Category
 	for _, entityCategory := range entityCategories {
@@ -89,6 +100,16 @@ func (o *GetVocabulariesResponse) MapFromEntities(vocabularies []VocabularyEntit
 type VocabularyWithCategories struct {
 	Vocabulary VocabularyEntity.Vocabulary `json:"vocabulary"`
 	Categories []string                    `json:"categories"`
+}
+
+func (o VocabularyWithCategories) MapToEntity() VocabularyEntity.Vocabulary {
+	return VocabularyEntity.Vocabulary{
+		Id:           o.Vocabulary.Id,
+		Words:        o.Vocabulary.Words,
+		Translation:  o.Vocabulary.Translation,
+		UsedInPhrase: o.Vocabulary.UsedInPhrase,
+		Explanation:  o.Vocabulary.Explanation,
+	}
 }
 
 type GetVocabularyCategoriesResponse struct {

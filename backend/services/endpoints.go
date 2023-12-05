@@ -82,59 +82,35 @@ func (o *Endpoints) getCategories(c *gin.Context, vocabularyEntity VocabularyEnt
 	c.JSON(http.StatusOK, getCategoriesResponse.Categories)
 }
 
-/*
-
-func (o *Endpoints) getVocabularyCategories(c *gin.Context, tx *gorm.DB) {
-	id := c.Params.ByName("id")
-	var vocabulary Entity.Vocabulary
-	tx.Model(&vocabulary).First(&vocabulary, id).Association("Categories").Find(&vocabulary.Categories)
-
-	if vocabulary.Id != 0 {
-		c.JSON(http.StatusOK, vocabulary.Categories)
-	} else {
-		c.AbortWithStatus(http.StatusNotFound)
+func (o *Endpoints) updateVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
+	var request Vocabulary
+	err := c.BindJSON(&request)
+	if err != nil {
+		return
 	}
+
+	vocabulary := vocabularyEntity.Update(request.MapToEntity())
+	var response Vocabulary
+	response.MapFromEntity(vocabulary)
+	c.JSON(http.StatusOK, response)
 }
 
-func (o *Endpoints) updateVocabulary(c *gin.Context, tx *gorm.DB) {
-	id := c.Params.ByName("id")
-	var vocabulary Entity.Vocabulary
-	tx.First(&vocabulary, id)
-
-	if vocabulary.Id != 0 {
-		err := c.BindJSON(&vocabulary)
-		util.CheckErr(err)
-		tx.Save(&vocabulary)
-		c.JSON(http.StatusOK, vocabulary)
-	} else {
-		c.AbortWithStatus(http.StatusNotFound)
+func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
+	strId := c.Params.ByName("id")
+	id, err := strconv.ParseUint(strId, 10, 32)
+	if err != nil {
+		return
 	}
-}
 
-func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, tx *gorm.DB) {
-	id := c.Params.ByName("id")
-	vocabulary := &Entity.Vocabulary{}
-	tx.First(vocabulary, id)
+	vocabulary := vocabularyEntity.GetVocabulary(uint(id))
 
-	if vocabulary.Id != 0 {
+	if vocabulary.Id != nil {
 		var requestData VocabularyWithCategories
 		if err := c.ShouldBindJSON(&requestData); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		vocabulary = &requestData.Vocabulary
-		tx.Save(vocabulary)
-
-		tx.Model(vocabulary).Association("Categories").Clear()
-
-		for _, categoryName := range requestData.Categories {
-			category := Entity.Category{}
-			if err := tx.Where("name = ?", categoryName).First(&category).Error; err != nil {
-				category = Entity.Category{Name: categoryName}
-				tx.Create(&category)
-			}
-			tx.Model(vocabulary).Association("Categories").Append(category)
-		}
+		vocabularyEntity.UpdateWithCategories(requestData.MapToEntity(), requestData.Categories)
 
 		c.JSON(http.StatusOK, vocabulary)
 	} else {
@@ -142,6 +118,7 @@ func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, tx *gorm.DB) 
 	}
 }
 
+/*
 func (o *Endpoints) deleteVocabulary(c *gin.Context, tx *gorm.DB) {
 	id := c.Params.ByName("id")
 	var vocabulary Entity.Vocabulary
@@ -177,13 +154,6 @@ func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, tx *gorm.DB) 
 	c.JSON(http.StatusCreated, vocabulary)
 }
 
-func (o *Endpoints) getCategories(c *gin.Context, tx *gorm.DB) {
-	var categories []Entity.Category
-	tx.Order("created_at DESC").Find(&categories)
-
-	c.JSON(http.StatusOK, categories)
-}
-
 */
 
 func (o *Endpoints) handle() {
@@ -191,8 +161,8 @@ func (o *Endpoints) handle() {
 	o.handleTxWithVocabularyEntity("/getVocabulary/:id", o.getVocabulary)
 	o.handleTxWithVocabularyEntity("/getVocabularyCategories/:id", o.getVocabularyCategories)
 	o.handleTxWithVocabularyEntity("/createVocabulary", o.createVocabulary)
-	//o.handleWithTx("/updateVocabulary/:id", o.updateVocabulary)
-	//o.handleWithTx("/updateVocabularyWithCategories/:id", o.updateVocabularyWithCategories)
+	o.handleTxWithVocabularyEntity("/updateVocabulary/:id", o.updateVocabulary)
+	o.handleTxWithVocabularyEntity("/updateVocabularyWithCategories/:id", o.updateVocabularyWithCategories)
 	//o.handleWithTx("/deleteVocabulary/:id", o.deleteVocabulary)
 	//o.handleWithTx("/createVocabularyWithCategories", o.createVocabularyWithCategories)
 	o.handleTxWithVocabularyEntity("/getCategories", o.getCategories)
