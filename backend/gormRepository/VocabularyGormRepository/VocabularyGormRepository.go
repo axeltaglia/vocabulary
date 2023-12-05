@@ -69,27 +69,32 @@ func (o Repository) UpdateVocabulary(vocabulary VocabularyEntity.Vocabulary) Voc
 }
 
 func (o Repository) UpdateVocabularyWithCategories(vocabulary VocabularyEntity.Vocabulary, categories []string) {
-	var dbVocabulary Vocabulary
-	o.tx.Model(&Vocabulary{}).First(&dbVocabulary, vocabulary.Id)
-	if dbVocabulary.Id != nil {
-		gormVocabulary := Vocabulary{
-			Id:           vocabulary.Id,
-			Words:        vocabulary.Words,
-			Translation:  vocabulary.Translation,
-			UsedInPhrase: vocabulary.UsedInPhrase,
-			Explanation:  vocabulary.Explanation,
+	gormVocabulary := Vocabulary{
+		Id:           vocabulary.Id,
+		Words:        vocabulary.Words,
+		Translation:  vocabulary.Translation,
+		UsedInPhrase: vocabulary.UsedInPhrase,
+		Explanation:  vocabulary.Explanation,
+	}
+	err1 := o.tx.Save(gormVocabulary).Error
+	if err1 != nil {
+		panic(err1)
+	}
+
+	err2 := o.tx.Model(gormVocabulary).Association("Categories").Clear().Error
+	if err2 != nil {
+		panic(err2)
+	}
+
+	for _, categoryName := range categories {
+		dbCategory := Category{}
+		if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; err != nil {
+			dbCategory = Category{Name: &categoryName}
+			o.tx.Create(&dbCategory)
 		}
-		o.tx.Update(&gormVocabulary)
-
-		o.tx.Model(vocabulary).Association("Categories").Clear()
-
-		for _, categoryName := range categories {
-			dbCategory := Category{}
-			if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; err != nil {
-				dbCategory = Category{Name: &categoryName}
-				o.tx.Create(&dbCategory)
-			}
-			o.tx.Model(vocabulary).Association("Categories").Append(dbCategory)
+		err3 := o.tx.Model(gormVocabulary).Association("Categories").Append(dbCategory).Error
+		if err3 != nil {
+			panic(err3)
 		}
 	}
 }
