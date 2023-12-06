@@ -23,14 +23,6 @@ type Category struct {
 	UpdatedAt    *time.Time   `json:"updatedAt"`
 }
 
-type VocabularyRepository interface {
-	CreateVocabulary(vocabulary Vocabulary) Vocabulary
-	GetAllVocabulariesWithCategories() []Vocabulary
-	FindVocabularyById(id uint) Vocabulary
-	FindCategories() []Category
-	UpdateVocabulary(vocabulary Vocabulary) Vocabulary
-	UpdateVocabularyWithCategories(Vocabulary, []string)
-}
 type Entity struct {
 	Repository VocabularyRepository
 }
