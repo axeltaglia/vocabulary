@@ -14,10 +14,10 @@ func TestVocabularyGormRepository(t *testing.T) {
 func TestCreateVocabulary(t *testing.T) {
 	db := gormRepository.InitDb(gormRepository.DbConfig{
 		Host:     "localhost",
-		Port:     "5435",
-		User:     "vocabulary",
-		Password: "vocabulary",
-		Database: "vocabulary",
+		Port:     "5436",
+		User:     "vocabulary_test",
+		Password: "vocabulary_test",
+		Database: "vocabulary_test",
 	})
 	repository := VocabularyGormRepository.New(db)
 	createdVocabulary := repository.CreateVocabulary(VocabularyEntity.Vocabulary{
@@ -27,7 +27,19 @@ func TestCreateVocabulary(t *testing.T) {
 		Explanation:  PString("Explanation"),
 	})
 	if createdVocabulary.Id == nil {
-		t.Errorf("A vocabulary Id is expected")
+		t.Errorf("Vocabulary Id is expected")
+	}
+
+	if createdVocabulary.CreatedAt == nil {
+		t.Errorf("Vocabulary CreatedAt date is expected")
+	}
+
+	if createdVocabulary.UpdatedAt == nil {
+		t.Errorf("Vocabulary UpdatedAt date is expected")
+	}
+
+	if createdVocabulary.Words == nil || *createdVocabulary.Words != "Words" {
+		t.Errorf("Vocabulary Word field is expected")
 	}
 }
 
