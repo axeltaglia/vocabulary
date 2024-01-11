@@ -12,13 +12,13 @@ func TestVocabularyGormRepository(t *testing.T) {
 	t.Run("CreateVocabulary", TestCreateVocabulary)
 }
 func TestCreateVocabulary(t *testing.T) {
-	db := gormRepository.InitDb(gormRepository.DbConfig{
+	db, _ := gormRepository.ConnectToDbWithMaxAttempts(gormRepository.DbConfig{
 		Host:     "localhost",
 		Port:     "5436",
 		User:     "vocabulary_test",
 		Password: "vocabulary_test",
 		Database: "vocabulary_test",
-	})
+	}, 30)
 	repository := VocabularyGormRepository.New(db)
 	createdVocabulary := repository.CreateVocabulary(VocabularyEntity.Vocabulary{
 		Words:        PString("Words"),

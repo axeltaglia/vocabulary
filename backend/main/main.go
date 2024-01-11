@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"vocabulary/gormRepository"
 	"vocabulary/main/util"
 	"vocabulary/services"
@@ -9,10 +11,16 @@ import (
 func main() {
 	config, err := util.LoadConfig("conf.json")
 	if err != nil {
-		panic(err)
+		fmt.Println("Config file error. Exiting.")
+		os.Exit(1)
 	}
 
-	db := gormRepository.InitDb(config.DbConfig)
+	db, errDb := gormRepository.ConnectToDbWithMaxAttempts(config.DbConfig, 30)
+	if errDb != nil {
+		fmt.Println("DB: Max connection attempts reached. Exiting.")
+		os.Exit(1)
+	}
+
 	gormTxRepositoryHandler := gormRepository.NewGormTxRepositoryHandler(db)
 
 	endpoints := services.NewEndpoints(gormTxRepositoryHandler)
