@@ -19,8 +19,8 @@ func (o *CreateVocabularyRequest) IsValid() bool {
 	return true
 }
 
-func (o *CreateVocabularyRequest) MapToEntity() VocabularyEntity.Vocabulary {
-	return VocabularyEntity.Vocabulary{
+func (o *CreateVocabularyRequest) MapToEntity() *VocabularyEntity.Vocabulary {
+	return &VocabularyEntity.Vocabulary{
 		Words:        o.Words,
 		Translation:  o.Translation,
 		UsedInPhrase: o.UsedInPhrase,

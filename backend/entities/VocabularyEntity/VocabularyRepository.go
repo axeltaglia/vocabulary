@@ -1,7 +1,7 @@
 package VocabularyEntity
 
 type VocabularyRepository interface {
-	CreateVocabulary(vocabulary Vocabulary) Vocabulary
+	CreateVocabulary(vocabulary *Vocabulary) (*Vocabulary, error)
 	GetAllVocabulariesWithCategories() []Vocabulary
 	FindVocabularyById(id uint) Vocabulary
 	FindCategories() []Category

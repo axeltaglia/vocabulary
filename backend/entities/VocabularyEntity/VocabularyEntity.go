@@ -27,15 +27,9 @@ type Entity struct {
 	Repository VocabularyRepository
 }
 
-func (o Entity) Create(vocabulary Vocabulary) Vocabulary {
-	newVocabulary := o.Repository.CreateVocabulary(Vocabulary{
-		Words:        vocabulary.Words,
-		Translation:  vocabulary.Translation,
-		UsedInPhrase: vocabulary.UsedInPhrase,
-		Explanation:  vocabulary.Explanation,
-	})
-
-	return newVocabulary
+func (o Entity) Create(vocabulary *Vocabulary) (*Vocabulary, error) {
+	newVocabulary, err := o.Repository.CreateVocabulary(vocabulary)
+	return newVocabulary, err
 }
 
 func (o Entity) GetAllVocabulariesWithCategories() []Vocabulary {

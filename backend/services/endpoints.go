@@ -1,9 +1,12 @@
 package services
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"vocabulary/entities"
 	"vocabulary/entities/VocabularyEntity"
@@ -26,11 +29,14 @@ func (o *Endpoints) createVocabulary(c *gin.Context, vocabularyEntity Vocabulary
 		return
 	}
 
-	vocabulary := vocabularyEntity.Create(request.MapToEntity())
+	vocabulary, err := vocabularyEntity.Create(request.MapToEntity())
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	var response Vocabulary
-	response.MapFromEntity(vocabulary)
-
+	response.MapFromEntity(*vocabulary)
 	c.JSON(http.StatusCreated, response)
 }
 
@@ -175,7 +181,8 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 		defer func() {
 			if r := recover(); r != nil {
 				txRepositoryFactory.RollbackTransaction()
-				panic(r)
+				stackTrace := string(debug.Stack())
+				fmt.Printf("%v\n%s\n", Marshal(r), stackTrace)
 			}
 		}()
 
@@ -190,6 +197,14 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 			txRepositoryFactory.CommitTransaction()
 		}
 	})
+}
+
+func Marshal(object interface{}) []byte {
+	bytes, err := json.Marshal(object)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
 }
 
 func (o *Endpoints) ListenAndServe(apiPort string) {
