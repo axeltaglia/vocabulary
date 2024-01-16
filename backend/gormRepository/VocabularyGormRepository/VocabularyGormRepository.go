@@ -1,9 +1,11 @@
 package VocabularyGormRepository
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
 	"time"
 	"vocabulary/entities/VocabularyEntity"
+	"vocabulary/logger"
 )
 
 type Repository struct {
@@ -31,8 +33,9 @@ type Category struct {
 
 func (o Repository) CreateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*VocabularyEntity.Vocabulary, error) {
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
-	err := o.tx.Create(&gormVocabulary).Error
-	if err != nil {
+
+	if err := o.tx.Create(&gormVocabulary).Error; err != nil {
+		logger.LogError("DB: Vocabulary couldn't be created", err)
 		return nil, err
 	}
 	vocabulary.Id = gormVocabulary.Id
@@ -41,55 +44,64 @@ func (o Repository) CreateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*
 	return vocabulary, nil
 }
 
-func (o Repository) UpdateVocabulary(vocabulary VocabularyEntity.Vocabulary) VocabularyEntity.Vocabulary {
-	gormVocabulary := mapVocabularyToDbVocabulary(&vocabulary)
-	o.tx.Update(&gormVocabulary)
+func (o Repository) UpdateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*VocabularyEntity.Vocabulary, error) {
+	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
+
+	if err := o.tx.Update(&gormVocabulary).Error; err != nil {
+		return nil, err
+	}
 	vocabulary.UpdatedAt = gormVocabulary.UpdatedAt
-	return vocabulary
+	return vocabulary, nil
 }
 
-func (o Repository) UpdateVocabularyWithCategories(vocabulary VocabularyEntity.Vocabulary, categories []string) {
-	gormVocabulary := mapVocabularyToDbVocabulary(&vocabulary)
-	err1 := o.tx.Save(gormVocabulary).Error
-	if err1 != nil {
-		panic(err1)
+func (o Repository) UpdateVocabularyWithCategories(vocabulary *VocabularyEntity.Vocabulary, categories []string) (*VocabularyEntity.Vocabulary, error) {
+	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
+	if err := o.tx.Save(gormVocabulary).Error; err != nil {
+		return nil, err
 	}
 
-	err2 := o.tx.Model(gormVocabulary).Association("Categories").Clear().Error
-	if err2 != nil {
-		panic(err2)
+	if err := o.tx.Model(gormVocabulary).Association("Categories").Clear().Error; err != nil {
+		return nil, err
 	}
 
 	for _, categoryName := range categories {
 		dbCategory := Category{}
-		if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; err != nil {
+		if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 			dbCategory = Category{Name: &categoryName}
-			o.tx.Create(&dbCategory)
+			if err := o.tx.Create(&dbCategory).Error; err != nil {
+				return nil, err
+			}
 		}
-		err3 := o.tx.Model(gormVocabulary).Association("Categories").Append(dbCategory).Error
-		if err3 != nil {
-			panic(err3)
+		if err := o.tx.Model(gormVocabulary).Association("Categories").Append(dbCategory).Error; err != nil {
+			return nil, err
 		}
 	}
+
+	updatedVocabulary := mapDbVocabularyToVocabulary(*gormVocabulary)
+	return &updatedVocabulary, nil
 }
 
-func (o Repository) GetAllVocabulariesWithCategories() []VocabularyEntity.Vocabulary {
+func (o Repository) GetAllVocabulariesWithCategories() ([]VocabularyEntity.Vocabulary, error) {
 	var dbVocabularies []Vocabulary
-	err := o.tx.Model(&Vocabulary{}).Order("created_at desc").Preload("Categories").Find(&dbVocabularies).Error
-	if err != nil {
-		panic(err)
+	if err := o.tx.Model(&Vocabulary{}).Order("created_at desc").Preload("Categories").Find(&dbVocabularies).Error; err != nil {
+		logger.LogError(err.Error(), err)
+		return nil, err
 	}
 
 	var vocabularies []VocabularyEntity.Vocabulary
 	vocabularies = mapDbVocabulariesToVocabularies(dbVocabularies, vocabularies)
 
-	return vocabularies
+	return vocabularies, nil
 }
 
-func (o Repository) FindVocabularyById(id uint) VocabularyEntity.Vocabulary {
+func (o Repository) FindVocabularyById(id uint) (*VocabularyEntity.Vocabulary, error) {
 	var dbVocabulary Vocabulary
-	o.tx.Model(&Vocabulary{}).Preload("Categories").First(&dbVocabulary, id)
-	return mapDbVocabularyToVocabulary(dbVocabulary)
+	err := o.tx.Model(&Vocabulary{}).Preload("Categories").First(&dbVocabulary, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Handle record not found error...
+	}
+	vocabulary := mapDbVocabularyToVocabulary(dbVocabulary)
+	return &vocabulary, nil
 }
 
 func (o Repository) FindCategories() []VocabularyEntity.Category {

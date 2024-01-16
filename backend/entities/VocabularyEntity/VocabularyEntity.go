@@ -2,6 +2,7 @@ package VocabularyEntity
 
 import (
 	"time"
+	"vocabulary/logger"
 )
 
 type Vocabulary struct {
@@ -29,20 +30,38 @@ type Entity struct {
 
 func (o Entity) Create(vocabulary *Vocabulary) (*Vocabulary, error) {
 	newVocabulary, err := o.Repository.CreateVocabulary(vocabulary)
+	if err != nil {
+		logger.LogInfo("Vocabulary couldn't be created")
+		return nil, err
+	}
 	return newVocabulary, err
 }
 
-func (o Entity) GetAllVocabulariesWithCategories() []Vocabulary {
-	return o.Repository.GetAllVocabulariesWithCategories()
+func (o Entity) GetAllVocabulariesWithCategories() ([]Vocabulary, error) {
+	vocabularies, err := o.Repository.GetAllVocabulariesWithCategories()
+	if err != nil {
+		logger.LogError("GetAllVocabulariesWithCategories has failed", err)
+		return nil, err
+	}
+	return vocabularies, nil
 }
 
-func (o Entity) GetVocabulary(id uint) Vocabulary {
-	return o.Repository.FindVocabularyById(id)
+func (o Entity) GetVocabulary(id uint) (*Vocabulary, error) {
+	vocabulary, err := o.Repository.FindVocabularyById(id)
+	if err != nil {
+		logger.LogError("GetVocabulary has failed", err)
+		return nil, err
+	}
+	return vocabulary, nil
 }
 
-func (o Entity) GetCategoriesFromVocabulary(vocabularyId uint) []Category {
-	vocabulary := o.Repository.FindVocabularyById(vocabularyId)
-	return vocabulary.Categories
+func (o Entity) GetCategoriesFromVocabulary(id uint) ([]Category, error) {
+	vocabulary, err := o.Repository.FindVocabularyById(id)
+	if err != nil {
+		logger.LogError("GetVocabulary has failed", err)
+		return nil, err
+	}
+	return vocabulary.Categories, err
 }
 
 func (o Entity) GetAllCategories() []Category {
@@ -50,12 +69,14 @@ func (o Entity) GetAllCategories() []Category {
 	return categories
 }
 
-func (o Entity) Update(vocabulary Vocabulary) Vocabulary {
-	return o.Repository.UpdateVocabulary(vocabulary)
+func (o Entity) Update(vocabulary *Vocabulary) (*Vocabulary, error) {
+	updatedVocabulary, _ := o.Repository.UpdateVocabulary(vocabulary)
+	return updatedVocabulary, nil
 }
 
-func (o Entity) UpdateWithCategories(vocabulary Vocabulary, categories []string) {
-	o.Repository.UpdateVocabularyWithCategories(vocabulary, categories)
+func (o Entity) UpdateWithCategories(vocabulary *Vocabulary, categories []string) (*Vocabulary, error) {
+	updatedVocabulary, _ := o.Repository.UpdateVocabularyWithCategories(vocabulary, categories)
+	return updatedVocabulary, nil
 }
 
 func New(repository VocabularyRepository) Entity {

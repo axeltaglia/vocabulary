@@ -28,6 +28,30 @@ func (o *CreateVocabularyRequest) MapToEntity() *VocabularyEntity.Vocabulary {
 	}
 }
 
+type UpdateVocabularyRequest struct {
+	Words        *string `json:"words"`
+	Translation  *string `json:"translation"`
+	UsedInPhrase *string `json:"usedInPhrase"`
+	Explanation  *string `json:"explanation"`
+}
+
+func (o *UpdateVocabularyRequest) IsValid() bool {
+	if o.Words == nil || *o.Words == "" {
+		return false
+	}
+
+	return true
+}
+
+func (o *UpdateVocabularyRequest) MapToEntity() *VocabularyEntity.Vocabulary {
+	return &VocabularyEntity.Vocabulary{
+		Words:        o.Words,
+		Translation:  o.Translation,
+		UsedInPhrase: o.UsedInPhrase,
+		Explanation:  o.Explanation,
+	}
+}
+
 type Vocabulary struct {
 	Id           *uint      `json:"id"`
 	Words        *string    `json:"words"`
@@ -37,7 +61,7 @@ type Vocabulary struct {
 	Categories   []Category `json:"categories"`
 }
 
-func (o *Vocabulary) MapFromEntity(vocabulary VocabularyEntity.Vocabulary) {
+func (o *Vocabulary) MapFromEntity(vocabulary *VocabularyEntity.Vocabulary) {
 	o.Id = vocabulary.Id
 	o.Words = vocabulary.Words
 	o.Translation = vocabulary.Translation
@@ -102,8 +126,8 @@ type VocabularyWithCategories struct {
 	Categories []string                    `json:"categories"`
 }
 
-func (o VocabularyWithCategories) MapToEntity() VocabularyEntity.Vocabulary {
-	return VocabularyEntity.Vocabulary{
+func (o VocabularyWithCategories) MapToEntity() *VocabularyEntity.Vocabulary {
+	return &VocabularyEntity.Vocabulary{
 		Id:           o.Vocabulary.Id,
 		Words:        o.Vocabulary.Words,
 		Translation:  o.Vocabulary.Translation,

@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"time"
 	"vocabulary/entities"
 	"vocabulary/entities/VocabularyEntity"
+	"vocabulary/logger"
 )
 
 type Endpoints struct {
@@ -31,17 +34,35 @@ func (o *Endpoints) createVocabulary(c *gin.Context, vocabularyEntity Vocabulary
 
 	vocabulary, err := vocabularyEntity.Create(request.MapToEntity())
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		logger.LogInfo("vocabulary/createVocabulary has failed")
 		return
 	}
 
 	var response Vocabulary
-	response.MapFromEntity(*vocabulary)
+	response.MapFromEntity(vocabulary)
 	c.JSON(http.StatusCreated, response)
 }
 
+func (o *Endpoints) updateVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
+	var request UpdateVocabularyRequest
+	err := c.BindJSON(&request)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	vocabulary, err := vocabularyEntity.Update(request.MapToEntity())
+	var response Vocabulary
+	response.MapFromEntity(vocabulary)
+	c.JSON(http.StatusOK, response)
+}
+
 func (o *Endpoints) getVocabularies(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
-	vocabularies := vocabularyEntity.GetAllVocabulariesWithCategories()
+	vocabularies, err := vocabularyEntity.GetAllVocabulariesWithCategories()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+	}
 
 	var getVocabulariesResponse GetVocabulariesResponse
 	getVocabulariesResponse.MapFromEntities(vocabularies)
@@ -53,10 +74,11 @@ func (o *Endpoints) getVocabulary(c *gin.Context, vocabularyEntity VocabularyEnt
 	strId := c.Params.ByName("id")
 	id, err := strconv.ParseUint(strId, 10, 32)
 	if err != nil {
-		panic("Id must be a number")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
 	}
 
-	vocabulary := vocabularyEntity.GetVocabulary(uint(id))
+	vocabulary, err := vocabularyEntity.GetVocabulary(uint(id))
 
 	var response Vocabulary
 	response.MapFromEntity(vocabulary)
@@ -68,10 +90,15 @@ func (o *Endpoints) getVocabularyCategories(c *gin.Context, vocabularyEntity Voc
 	strId := c.Params.ByName("id")
 	id, err := strconv.ParseUint(strId, 10, 32)
 	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	entityCategories := vocabularyEntity.GetCategoriesFromVocabulary(uint(id))
+	entityCategories, err := vocabularyEntity.GetCategoriesFromVocabulary(uint(id))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
 
 	var getVocabularyCategoriesResponse GetVocabularyCategoriesResponse
 	getVocabularyCategoriesResponse.MapFromEntities(entityCategories)
@@ -88,27 +115,19 @@ func (o *Endpoints) getCategories(c *gin.Context, vocabularyEntity VocabularyEnt
 	c.JSON(http.StatusOK, getCategoriesResponse.Categories)
 }
 
-func (o *Endpoints) updateVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
-	var request Vocabulary
-	err := c.BindJSON(&request)
-	if err != nil {
-		return
-	}
-
-	vocabulary := vocabularyEntity.Update(request.MapToEntity())
-	var response Vocabulary
-	response.MapFromEntity(vocabulary)
-	c.JSON(http.StatusOK, response)
-}
-
 func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
 	strId := c.Params.ByName("id")
 	id, err := strconv.ParseUint(strId, 10, 32)
 	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	vocabulary := vocabularyEntity.GetVocabulary(uint(id))
+	vocabulary, err := vocabularyEntity.GetVocabulary(uint(id))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
 
 	if vocabulary.Id != nil {
 		var requestData VocabularyWithCategories
@@ -116,7 +135,10 @@ func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEnt
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		vocabularyEntity.UpdateWithCategories(requestData.MapToEntity(), requestData.Categories)
+		vocabulary, err := vocabularyEntity.UpdateWithCategories(requestData.MapToEntity(), requestData.Categories)
+		if err != nil {
+			return
+		}
 
 		c.JSON(http.StatusOK, vocabulary)
 	} else {
@@ -182,7 +204,7 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 			if r := recover(); r != nil {
 				txRepositoryFactory.RollbackTransaction()
 				stackTrace := string(debug.Stack())
-				fmt.Printf("%v\n%s\n", Marshal(r), stackTrace)
+				fmt.Printf("%v\n%s\n", r, stackTrace)
 			}
 		}()
 
@@ -217,12 +239,44 @@ func (o *Endpoints) ListenAndServe(apiPort string) {
 
 func NewEndpoints(txRepositoryHandler entities.TxRepositoryHandler) *Endpoints {
 	router := gin.Default()
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept"}
-	router.Use(cors.New(corsConfig))
+	router.Use(corsMiddleware())
+	router.Use(loggerMiddleware())
 	return &Endpoints{
 		router:              router,
 		txRepositoryHandler: txRepositoryHandler,
+	}
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept"}
+	return cors.New(corsConfig)
+}
+
+func loggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+		raw := c.Request.URL.RawQuery
+
+		c.Next()
+
+		end := time.Now()
+		latency := end.Sub(start)
+		clientIP := c.ClientIP()
+		method := c.Request.Method
+		statusCode := c.Writer.Status()
+		errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
+
+		logger.Log().WithFields(logrus.Fields{
+			"status":    statusCode,
+			"latency":   latency,
+			"client_ip": clientIP,
+			"method":    method,
+			"path":      path,
+			"raw_query": raw,
+			"error":     errorMessage,
+		}).Info("Request handled")
 	}
 }

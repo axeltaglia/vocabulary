@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"vocabulary/gormRepository"
+	"vocabulary/logger"
 	"vocabulary/main/util"
 	"vocabulary/services"
 )
@@ -14,6 +15,9 @@ func main() {
 		fmt.Println("Config file error. Exiting.")
 		os.Exit(1)
 	}
+
+	logger.InitLogger()
+	logger.Log().Infof("holaaa")
 
 	db, errDb := gormRepository.ConnectToDbWithMaxAttempts(config.DbConfig, 30)
 	if errDb != nil {
