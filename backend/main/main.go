@@ -6,7 +6,7 @@ import (
 	"vocabulary/gormRepository"
 	"vocabulary/logger"
 	"vocabulary/main/util"
-	"vocabulary/services"
+	"vocabulary/services/vocabularyEndpoints"
 )
 
 func main() {
@@ -27,6 +27,6 @@ func main() {
 
 	gormTxRepositoryHandler := gormRepository.NewGormTxRepositoryHandler(db)
 
-	endpoints := services.NewEndpoints(gormTxRepositoryHandler)
+	endpoints := vocabularyEndpoints.NewEndpoints(gormTxRepositoryHandler)
 	endpoints.ListenAndServe(config.ApiPort)
 }
