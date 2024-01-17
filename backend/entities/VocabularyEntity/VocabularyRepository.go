@@ -7,4 +7,5 @@ type VocabularyRepository interface {
 	FindCategories() []Category
 	UpdateVocabulary(vocabulary *Vocabulary) (*Vocabulary, error)
 	UpdateVocabularyWithCategories(*Vocabulary, []string) (*Vocabulary, error)
+	DeleteVocabularyById(uint) error
 }

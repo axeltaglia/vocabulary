@@ -74,6 +74,13 @@ func (o Entity) Update(vocabulary *Vocabulary) (*Vocabulary, error) {
 	return updatedVocabulary, nil
 }
 
+func (o Entity) Delete(id uint) error {
+	if err := o.Repository.DeleteVocabularyById(id); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (o Entity) UpdateWithCategories(vocabulary *Vocabulary, categories []string) (*Vocabulary, error) {
 	updatedVocabulary, _ := o.Repository.UpdateVocabularyWithCategories(vocabulary, categories)
 	return updatedVocabulary, nil

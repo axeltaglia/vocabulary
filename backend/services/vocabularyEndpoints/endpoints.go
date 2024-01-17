@@ -63,7 +63,7 @@ func (o *Endpoints) handle() {
 	o.handleTxWithVocabularyEntity("/createVocabulary", o.createVocabulary)
 	o.handleTxWithVocabularyEntity("/updateVocabulary/:id", o.updateVocabulary)
 	o.handleTxWithVocabularyEntity("/updateVocabularyWithCategories/:id", o.updateVocabularyWithCategories)
-	//o.handleWithTx("/deleteVocabulary/:id", o.deleteVocabulary)
+	o.handleTxWithVocabularyEntity("/deleteVocabulary/:id", o.deleteVocabulary)
 	//o.handleWithTx("/createVocabularyWithCategories", o.createVocabularyWithCategories)
 	o.handleTxWithVocabularyEntity("/getCategories", o.getCategories)
 }

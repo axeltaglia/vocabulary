@@ -2,6 +2,7 @@ package VocabularyGormRepository
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"time"
 	"vocabulary/entities/VocabularyEntity"
@@ -52,6 +53,14 @@ func (o Repository) UpdateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*
 	}
 	vocabulary.UpdatedAt = gormVocabulary.UpdatedAt
 	return vocabulary, nil
+}
+
+func (o Repository) DeleteVocabularyById(id uint) error {
+	if err := o.tx.Delete(&Vocabulary{}, id).Error; err != nil {
+		logger.LogError(fmt.Sprintf("DB: Couldn't delete Vocabulary from id %d", id), err)
+		return err
+	}
+	return nil
 }
 
 func (o Repository) UpdateVocabularyWithCategories(vocabulary *VocabularyEntity.Vocabulary, categories []string) (*VocabularyEntity.Vocabulary, error) {
