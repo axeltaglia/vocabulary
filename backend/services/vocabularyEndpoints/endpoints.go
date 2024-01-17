@@ -101,13 +101,18 @@ func (o *Endpoints) ListenAndServe(apiPort string) {
 }
 
 func NewEndpoints(txRepositoryHandler entities.TxRepositoryHandler) *Endpoints {
-	router := gin.Default()
-	router.Use(corsMiddleware())
-	router.Use(loggerMiddleware())
+	router := getGinRouter()
 	return &Endpoints{
 		router:              router,
 		txRepositoryHandler: txRepositoryHandler,
 	}
+}
+
+func getGinRouter() *gin.Engine {
+	router := gin.Default()
+	router.Use(corsMiddleware())
+	router.Use(loggerMiddleware())
+	return router
 }
 
 func corsMiddleware() gin.HandlerFunc {
