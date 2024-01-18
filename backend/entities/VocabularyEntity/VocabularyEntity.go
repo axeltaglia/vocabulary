@@ -37,6 +37,15 @@ func (o Entity) Create(vocabulary *Vocabulary) (*Vocabulary, error) {
 	return newVocabulary, err
 }
 
+func (o Entity) CreateWithCategories(vocabulary *Vocabulary, categories []string) (*Vocabulary, error) {
+	newVocabulary, err := o.Repository.CreateVocabularyWithCategories(vocabulary, categories)
+	if err != nil {
+		logger.LogInfo("Vocabulary couldn't be created")
+		return nil, err
+	}
+	return newVocabulary, err
+}
+
 func (o Entity) GetAllVocabulariesWithCategories() ([]Vocabulary, error) {
 	vocabularies, err := o.Repository.GetAllVocabulariesWithCategories()
 	if err != nil {

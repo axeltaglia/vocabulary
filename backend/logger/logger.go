@@ -63,22 +63,6 @@ func LogInfo(msg string) {
 	}).Info("Info message")
 }
 
-func getStackTrace1() string {
-	var stackTrace strings.Builder
-	stackTrace.WriteString("\nStack Trace:\n")
-
-	for i := 3; ; i++ {
-		_, file, line, ok := runtime.Caller(i)
-		if !ok {
-			break
-		}
-
-		stackTrace.WriteString(fmt.Sprintf("%s:%d\n", file, line))
-	}
-
-	return stackTrace.String()
-}
-
 func getStackTrace(err error) string {
 	stackTrace := string(debug.Stack())
 	return fmt.Sprintf("%v\n%s\n", err.Error(), stackTrace)

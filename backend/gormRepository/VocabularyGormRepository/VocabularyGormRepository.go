@@ -45,6 +45,31 @@ func (o Repository) CreateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*
 	return vocabulary, nil
 }
 
+func (o Repository) CreateVocabularyWithCategories(vocabulary *VocabularyEntity.Vocabulary, categories []string) (*VocabularyEntity.Vocabulary, error) {
+	createVocabulary, _ := o.CreateVocabulary(vocabulary)
+	gormVocabulary := mapVocabularyToDbVocabulary(createVocabulary)
+
+	if err := o.tx.Model(gormVocabulary).Association("Categories").Error; err != nil {
+		return nil, err
+	}
+
+	for _, categoryName := range categories {
+		dbCategory := Category{}
+		if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+			dbCategory = Category{Name: &categoryName}
+			if err := o.tx.Create(&dbCategory).Error; err != nil {
+				return nil, err
+			}
+		}
+		if err := o.tx.Model(gormVocabulary).Association("Categories").Append(dbCategory).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	createdVocabulary := mapDbVocabularyToVocabulary(*gormVocabulary)
+	return &createdVocabulary, nil
+}
+
 func (o Repository) UpdateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*VocabularyEntity.Vocabulary, error) {
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
 

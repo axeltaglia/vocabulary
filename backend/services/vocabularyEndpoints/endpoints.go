@@ -18,44 +18,6 @@ type Endpoints struct {
 	txRepositoryHandler entities.TxRepositoryHandler
 }
 
-/*
-func (o *Endpoints) deleteVocabulary(c *gin.Context, tx *gorm.DB) {
-	id := c.Params.ByName("id")
-	var vocabulary Entity.Vocabulary
-	tx.First(&vocabulary, id)
-
-	if vocabulary.Id != 0 {
-		tx.Delete(&vocabulary)
-		c.JSON(http.StatusOK, gin.H{"message": "Vocabulary deleted"})
-	} else {
-		c.AbortWithStatus(http.StatusNotFound)
-	}
-}
-
-func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, tx *gorm.DB) {
-	var requestData VocabularyWithCategories
-	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	vocabulary := requestData.Vocabulary
-	tx.Create(&vocabulary)
-
-	for _, categoryName := range requestData.Categories {
-		category := Entity.Category{}
-		if err := tx.Where("name = ?", categoryName).First(&category).Error; err != nil {
-			category = Entity.Category{Name: categoryName}
-			tx.Create(&category)
-		}
-		tx.Model(&vocabulary).Association("Categories").Append(category)
-	}
-
-	c.JSON(http.StatusCreated, vocabulary)
-}
-
-*/
-
 func (o *Endpoints) handle() {
 	o.handleTxWithVocabularyEntity("/getVocabularies", o.getVocabularies)
 	o.handleTxWithVocabularyEntity("/getVocabulary/:id", o.getVocabulary)
@@ -64,7 +26,7 @@ func (o *Endpoints) handle() {
 	o.handleTxWithVocabularyEntity("/updateVocabulary/:id", o.updateVocabulary)
 	o.handleTxWithVocabularyEntity("/updateVocabularyWithCategories/:id", o.updateVocabularyWithCategories)
 	o.handleTxWithVocabularyEntity("/deleteVocabulary/:id", o.deleteVocabulary)
-	//o.handleWithTx("/createVocabularyWithCategories", o.createVocabularyWithCategories)
+	o.handleTxWithVocabularyEntity("/createVocabularyWithCategories", o.createVocabularyWithCategories)
 	o.handleTxWithVocabularyEntity("/getCategories", o.getCategories)
 }
 
