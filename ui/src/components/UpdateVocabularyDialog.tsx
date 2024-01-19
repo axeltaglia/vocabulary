@@ -64,7 +64,8 @@ export default function UpdateVocabularyDialog() {
                 words: data.words,
                 translation: data.translation,
                 usedInPhrase: data.usedInPhrase,
-                explanation: data.explanation
+                explanation: data.explanation,
+                categories: []
             },
             categories: data.categories
         }

@@ -12,6 +12,7 @@ type VocabularyAction =
     | { type: 'SET_VOCABULARY_ID_TO_UPDATE'; payload: number }
     | { type: 'SET_VOCABULARY_TO_DELETE'; payload: number }
     | { type: 'SET_CATEGORIES'; payload: Category[] }
+    | { type: 'MERGE_CATEGORIES'; payload: Category[] }
     | { type: 'UPDATE_VOCABULARY_CATEGORIES'; payload: VocabularyCategory }
 
 export const vocabularyReducer = (state: VocabularyState, action: VocabularyAction): VocabularyState => {
@@ -77,6 +78,12 @@ export const vocabularyReducer = (state: VocabularyState, action: VocabularyActi
             return {
                 ...state,
                 categories: action.payload,
+            }
+        case 'MERGE_CATEGORIES':
+            return {
+                ...state,
+                categories: [...state.categories, ...action.payload.filter(category => !state.categories.some(stateCategory => stateCategory.id === category.id))
+                ]
             }
         case 'UPDATE_VOCABULARY_CATEGORIES':
             const updatedVocabularyCategoriesList = state.vocabularies.map((item) => {

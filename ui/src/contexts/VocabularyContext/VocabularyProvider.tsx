@@ -82,29 +82,15 @@ export default function VocabularyProvider({children}: ChildrenType): ReactEleme
         }
     }
 
-    const updateVocabulary = async (vocabulary: Vocabulary) => {
-        dispatch({type: 'SET_LOADING', payload: true})
-        try {
-            const data: AxiosResponse = await VocabularyApi.updateVocabulary(vocabulary)
-            dispatch({type: 'UPDATE_VOCABULARY', payload: vocabulary})
-            dispatch({type: 'SET_LOADING', payload: false})
-            alertSuccessMsg("Vocabulary updated")
-            return data.data
-        } catch (e) {
-            dispatch({type: 'SET_LOADING', payload: false})
-            const msg : string = getErrorMessage(e)
-            alertErrorMsg(msg)
-        }
-    }
-
     const updateVocabularyWithCategories = async (vocabularyWithCategories: VocabularyWithCategoriesRequest) => {
         dispatch({type: 'SET_LOADING', payload: true})
         try {
             const data: AxiosResponse = await VocabularyApi.updateVocabularyWithCategories(vocabularyWithCategories)
-            dispatch({type: 'UPDATE_VOCABULARY', payload: data.data})
+            let vocabulary:Vocabulary = data.data
+            dispatch({type: 'UPDATE_VOCABULARY', payload: vocabulary})
+            dispatch({type: 'MERGE_CATEGORIES', payload: vocabulary.categories})
             dispatch({type: 'SET_LOADING', payload: false})
             alertSuccessMsg("The vocabulary was updated")
-            getCategories()
             return data.data
         } catch (e) {
             dispatch({type: 'SET_LOADING', payload: false})
@@ -176,7 +162,6 @@ export default function VocabularyProvider({children}: ChildrenType): ReactEleme
     return <VocabularyContext.Provider value={{
         state,
         getVocabularies,
-        updateVocabulary,
         createVocabulary,
         deleteVocabulary,
         createVocabularyWithCategories,

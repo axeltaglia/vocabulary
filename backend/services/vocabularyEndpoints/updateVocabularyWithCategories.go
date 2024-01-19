@@ -22,7 +22,7 @@ func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEnt
 	}
 
 	if vocabulary.Id != nil {
-		var requestData VocabularyWithCategories
+		var requestData VocabularyWithCategoriesRequest
 		if err := c.ShouldBindJSON(&requestData); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -41,12 +41,12 @@ func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEnt
 	}
 }
 
-type VocabularyWithCategories struct {
+type VocabularyWithCategoriesRequest struct {
 	Vocabulary VocabularyEntity.Vocabulary `json:"vocabulary"`
 	Categories []string                    `json:"categories"`
 }
 
-func (o VocabularyWithCategories) MapToEntity() *VocabularyEntity.Vocabulary {
+func (o VocabularyWithCategoriesRequest) MapToEntity() *VocabularyEntity.Vocabulary {
 	return &VocabularyEntity.Vocabulary{
 		Id:           o.Vocabulary.Id,
 		Words:        o.Vocabulary.Words,
@@ -58,16 +58,8 @@ func (o VocabularyWithCategories) MapToEntity() *VocabularyEntity.Vocabulary {
 
 type UpdateVocabularyWithCategoriesResponse struct {
 	Vocabulary
-	Categories []Category `json:"categories"`
 }
 
 func (o *UpdateVocabularyWithCategoriesResponse) MapFromEntity(vocabulary *VocabularyEntity.Vocabulary) {
 	o.Vocabulary.MapFromEntity(vocabulary)
-	for _, category := range vocabulary.Categories {
-		item := Category{
-			Id:   category.Id,
-			Name: category.Name,
-		}
-		o.Categories = append(o.Categories, item)
-	}
 }

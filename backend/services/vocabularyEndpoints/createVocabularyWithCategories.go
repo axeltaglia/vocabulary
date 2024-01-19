@@ -52,3 +52,11 @@ func (o CreateVocabularyWithCategoriesRequest) MapToEntity() *VocabularyEntity.V
 		Explanation:  o.Vocabulary.Explanation,
 	}
 }
+
+type CreateVocabularyWithCategoriesResponse struct {
+	Vocabulary
+}
+
+func (o *CreateVocabularyWithCategoriesResponse) MapFromEntity(vocabulary *VocabularyEntity.Vocabulary) {
+	o.Vocabulary.MapFromEntity(vocabulary)
+}

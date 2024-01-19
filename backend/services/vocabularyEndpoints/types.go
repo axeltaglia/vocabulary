@@ -22,4 +22,11 @@ func (o *Vocabulary) MapFromEntity(vocabulary *VocabularyEntity.Vocabulary) {
 	o.Translation = vocabulary.Translation
 	o.UsedInPhrase = vocabulary.UsedInPhrase
 	o.Explanation = vocabulary.Explanation
+	for _, categoryEntity := range vocabulary.Categories {
+		o.Categories = append(o.Categories, Category{
+			Id:   categoryEntity.Id,
+			Name: categoryEntity.Name,
+		})
+	}
+
 }

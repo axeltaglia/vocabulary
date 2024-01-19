@@ -4,7 +4,7 @@ export type Vocabulary = {
     translation: string
     usedInPhrase: string
     explanation: string
-    categories?: Category[]
+    categories: Category[]
 }
 export type Category = {
     id?: number
@@ -32,7 +32,6 @@ export type VocabularyState = {
 export type VocabularyContextProps = {
     state: VocabularyState,
     getVocabularies: () => Promise<void>
-    updateVocabulary: (vocabulary: Vocabulary) => Promise<void>
     createVocabulary: (vocabulary: Vocabulary) => Promise<void>
     deleteVocabulary: (vocabulary: Vocabulary) => Promise<void>
     createVocabularyWithCategories: (vocabularyWithCategories: VocabularyWithCategoriesRequest) => Promise<void>
