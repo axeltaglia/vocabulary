@@ -32,7 +32,10 @@ func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEnt
 			return
 		}
 
-		c.JSON(http.StatusOK, vocabulary)
+		var response UpdateVocabularyWithCategoriesResponse
+		response.MapFromEntity(vocabulary)
+
+		c.JSON(http.StatusOK, response)
 	} else {
 		c.AbortWithStatus(http.StatusNotFound)
 	}
@@ -50,5 +53,21 @@ func (o VocabularyWithCategories) MapToEntity() *VocabularyEntity.Vocabulary {
 		Translation:  o.Vocabulary.Translation,
 		UsedInPhrase: o.Vocabulary.UsedInPhrase,
 		Explanation:  o.Vocabulary.Explanation,
+	}
+}
+
+type UpdateVocabularyWithCategoriesResponse struct {
+	Vocabulary
+	Categories []Category `json:"categories"`
+}
+
+func (o *UpdateVocabularyWithCategoriesResponse) MapFromEntity(vocabulary *VocabularyEntity.Vocabulary) {
+	o.Vocabulary.MapFromEntity(vocabulary)
+	for _, category := range vocabulary.Categories {
+		item := Category{
+			Id:   category.Id,
+			Name: category.Name,
+		}
+		o.Categories = append(o.Categories, item)
 	}
 }
