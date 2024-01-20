@@ -12,7 +12,7 @@ export const VocabularyApi = {
         return api.post("/updateVocabulary/" + payload.id, payload)
     },
     updateVocabularyWithCategories: function(payload: VocabularyWithCategoriesRequest) {
-        return api.post<VocabularyWithCategoriesRequest>("/updateVocabularyWithCategories/" + payload.vocabulary.id, payload);
+        return api.post<VocabularyWithCategoriesRequest>("/updateVocabularyWithCategories", payload);
     },
     deleteVocabulary: function(id: number | undefined) {
         return api.post("/deleteVocabulary/" + id)

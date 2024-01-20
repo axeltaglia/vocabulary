@@ -91,7 +91,28 @@ func (o Entity) Delete(id uint) error {
 }
 
 func (o Entity) UpdateWithCategories(vocabulary *Vocabulary, categories []string) (*Vocabulary, error) {
-	updatedVocabulary, _ := o.Repository.UpdateVocabularyWithCategories(vocabulary, categories)
+	updatedVocabulary, err := o.Repository.UpdateVocabulary(vocabulary)
+	if err != nil {
+		return nil, err
+	}
+
+	err = o.Repository.DisassociateCategoriesFromVocabulary(updatedVocabulary)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, categoryName := range categories {
+		category, err := o.Repository.CreateCategoryIfNotExist(categoryName)
+		if err != nil {
+			return nil, err
+		}
+
+		updatedVocabulary, err = o.Repository.AssociateCategoryToVocabulary(updatedVocabulary, category)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return updatedVocabulary, nil
 }
 

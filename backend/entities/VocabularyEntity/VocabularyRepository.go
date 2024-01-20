@@ -6,7 +6,9 @@ type VocabularyRepository interface {
 	GetAllVocabulariesWithCategories() ([]Vocabulary, error)
 	FindVocabularyById(id uint) (*Vocabulary, error)
 	FindCategories() []Category
-	UpdateVocabulary(vocabulary *Vocabulary) (*Vocabulary, error)
-	UpdateVocabularyWithCategories(*Vocabulary, []string) (*Vocabulary, error)
+	UpdateVocabulary(*Vocabulary) (*Vocabulary, error)
+	DisassociateCategoriesFromVocabulary(*Vocabulary) error
+	AssociateCategoryToVocabulary(*Vocabulary, *Category) (*Vocabulary, error)
+	CreateCategoryIfNotExist(categoryName string) (*Category, error)
 	DeleteVocabularyById(uint) error
 }

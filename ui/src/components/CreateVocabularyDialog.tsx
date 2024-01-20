@@ -54,7 +54,7 @@ export default function CreateVocabularyDialog() {
                 explanation: data.explanation,
                 categories: []
             },
-            categories: data.categories
+            categoryNames: data.categories
         }
 
         createVocabularyWithCategories(vocabularyWithCategoriesRequest)

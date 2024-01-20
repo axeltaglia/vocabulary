@@ -67,7 +67,7 @@ export default function UpdateVocabularyDialog() {
                 explanation: data.explanation,
                 categories: []
             },
-            categories: data.categories
+            categoryNames: data.categories
         }
 
         updateVocabularyWithCategories(vocabularyWithCategoriesRequest)

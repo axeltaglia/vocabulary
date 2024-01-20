@@ -17,7 +17,7 @@ export type VocabularyCategory = {
 
 export type VocabularyWithCategoriesRequest = {
     vocabulary: Vocabulary
-    categories: string[]
+    categoryNames: string[]
 }
 export type VocabularyState = {
     vocabularies: Vocabulary[]

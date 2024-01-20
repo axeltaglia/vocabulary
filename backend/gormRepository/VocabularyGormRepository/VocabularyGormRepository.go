@@ -72,47 +72,54 @@ func (o Repository) CreateVocabularyWithCategories(vocabulary *VocabularyEntity.
 
 func (o Repository) UpdateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*VocabularyEntity.Vocabulary, error) {
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
-
-	if err := o.tx.Update(&gormVocabulary).Error; err != nil {
+	if err := o.tx.Save(gormVocabulary).Error; err != nil {
+		logger.LogError("[Gorm Repository] Vocabulary couldn't be updated", err)
 		return nil, err
 	}
+
 	vocabulary.UpdatedAt = gormVocabulary.UpdatedAt
 	return vocabulary, nil
 }
 
-func (o Repository) DeleteVocabularyById(id uint) error {
-	if err := o.tx.Delete(&Vocabulary{}, id).Error; err != nil {
-		logger.LogError(fmt.Sprintf("DB: Couldn't delete Vocabulary from id %d", id), err)
+func (o Repository) DisassociateCategoriesFromVocabulary(vocabulary *VocabularyEntity.Vocabulary) error {
+	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
+	if err := o.tx.Model(gormVocabulary).Association("Categories").Clear().Error; err != nil {
+		logger.LogError("[Gorm Repository] Categories couldn't be disassociated to Vocabulary", err)
 		return err
 	}
 	return nil
 }
 
-func (o Repository) UpdateVocabularyWithCategories(vocabulary *VocabularyEntity.Vocabulary, categories []string) (*VocabularyEntity.Vocabulary, error) {
+func (o Repository) AssociateCategoryToVocabulary(vocabulary *VocabularyEntity.Vocabulary, category *VocabularyEntity.Category) (*VocabularyEntity.Vocabulary, error) {
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
-	if err := o.tx.Save(gormVocabulary).Error; err != nil {
+	gormCategory := mapCategoryToDbCategory(category)
+	if err := o.tx.Model(gormVocabulary).Association("Categories").Append(gormCategory).Error; err != nil {
+		logger.LogError("[Gorm Repository] Category couldn't be associated to Vocabulary", err)
 		return nil, err
-	}
-
-	if err := o.tx.Model(gormVocabulary).Association("Categories").Clear().Error; err != nil {
-		return nil, err
-	}
-
-	for _, categoryName := range categories {
-		dbCategory := Category{}
-		if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-			dbCategory = Category{Name: &categoryName}
-			if err := o.tx.Create(&dbCategory).Error; err != nil {
-				return nil, err
-			}
-		}
-		if err := o.tx.Model(gormVocabulary).Association("Categories").Append(dbCategory).Error; err != nil {
-			return nil, err
-		}
 	}
 
 	updatedVocabulary := mapDbVocabularyToVocabulary(*gormVocabulary)
 	return &updatedVocabulary, nil
+}
+
+func (o Repository) CreateCategoryIfNotExist(categoryName string) (*VocabularyEntity.Category, error) {
+	dbCategory := Category{}
+	if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		dbCategory = Category{Name: &categoryName}
+		if err := o.tx.Create(&dbCategory).Error; err != nil {
+			logger.LogError("[Gorm Repository] Category couldn't be created", err)
+			return nil, err
+		}
+	}
+	return mapDbCategoryToCategory(dbCategory), nil
+}
+
+func (o Repository) DeleteVocabularyById(id uint) error {
+	if err := o.tx.Delete(&Vocabulary{}, id).Error; err != nil {
+		logger.LogError(fmt.Sprintf("[Gorm Repository] Couldn't delete Vocabulary from id %d", id), err)
+		return err
+	}
+	return nil
 }
 
 func (o Repository) GetAllVocabulariesWithCategories() ([]VocabularyEntity.Vocabulary, error) {
@@ -158,12 +165,22 @@ func mapDbVocabularyToVocabulary(dbVocabulary Vocabulary) VocabularyEntity.Vocab
 }
 
 func mapVocabularyToDbVocabulary(vocabulary *VocabularyEntity.Vocabulary) *Vocabulary {
+	var categories []*Category
+	for _, categoryEntity := range vocabulary.Categories {
+		categories = append(categories, &Category{
+			Id:        categoryEntity.Id,
+			Name:      categoryEntity.Name,
+			CreatedAt: categoryEntity.CreatedAt,
+			UpdatedAt: categoryEntity.UpdatedAt,
+		})
+	}
 	return &Vocabulary{
 		Id:           vocabulary.Id,
 		Words:        vocabulary.Words,
 		Translation:  vocabulary.Translation,
 		UsedInPhrase: vocabulary.UsedInPhrase,
 		Explanation:  vocabulary.Explanation,
+		Categories:   categories,
 	}
 }
 
@@ -195,6 +212,24 @@ func mapDbCategoriesToCategories(dcCategories []*Category) []VocabularyEntity.Ca
 	}
 
 	return categories
+}
+
+func mapCategoryToDbCategory(category *VocabularyEntity.Category) *Category {
+	return &Category{
+		Id:        category.Id,
+		Name:      category.Name,
+		CreatedAt: category.CreatedAt,
+		UpdatedAt: category.UpdatedAt,
+	}
+}
+
+func mapDbCategoryToCategory(category Category) *VocabularyEntity.Category {
+	return &VocabularyEntity.Category{
+		Id:        category.Id,
+		Name:      category.Name,
+		CreatedAt: category.CreatedAt,
+		UpdatedAt: category.UpdatedAt,
+	}
 }
 
 func New(tx *gorm.DB) Repository {

@@ -30,3 +30,13 @@ func (o *Vocabulary) MapFromEntity(vocabulary *VocabularyEntity.Vocabulary) {
 	}
 
 }
+
+func (o *Vocabulary) MapToEntity() *VocabularyEntity.Vocabulary {
+	return &VocabularyEntity.Vocabulary{
+		Id:           o.Id,
+		Words:        o.Words,
+		Translation:  o.Translation,
+		UsedInPhrase: o.UsedInPhrase,
+		Explanation:  o.Explanation,
+	}
+}
