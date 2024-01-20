@@ -32,7 +32,6 @@ export type VocabularyState = {
 export type VocabularyContextProps = {
     state: VocabularyState,
     getVocabularies: () => Promise<void>
-    createVocabulary: (vocabulary: Vocabulary) => Promise<void>
     deleteVocabulary: (vocabulary: Vocabulary) => Promise<void>
     createVocabularyWithCategories: (vocabularyWithCategories: VocabularyWithCategoriesRequest) => Promise<void>
     updateVocabularyWithCategories: (vocabularyWithCategories: VocabularyWithCategoriesRequest) => Promise<void>

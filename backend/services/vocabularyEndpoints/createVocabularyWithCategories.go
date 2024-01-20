@@ -1,6 +1,7 @@
 package vocabularyEndpoints
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"vocabulary/entities/VocabularyEntity"
@@ -10,41 +11,41 @@ import (
 func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
 	var request CreateVocabularyWithCategoriesRequest
 	if err := c.BindJSON(&request); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if !request.IsValid() {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Words is mandatory"})
+	if err := request.Validate(); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	vocabulary, err := vocabularyEntity.CreateWithCategories(request.MapToEntity(), request.Categories)
+	vocabulary, err := vocabularyEntity.CreateWithCategories(request.MapToEntity(), request.CategoryNames)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		logger.LogInfo("vocabulary/createVocabulary has failed")
 		return
 	}
 
-	var createVocabularyResponse CreateVocabularyResponse
+	var createVocabularyResponse CreateVocabularyWithCategoriesResponse
 	createVocabularyResponse.MapFromEntity(vocabulary)
 	c.JSON(http.StatusCreated, createVocabularyResponse)
 }
 
 type CreateVocabularyWithCategoriesRequest struct {
-	Vocabulary Vocabulary `json:"vocabulary"`
-	Categories []string   `json:"categories"`
+	Vocabulary    Vocabulary `json:"vocabulary"`
+	CategoryNames []string   `json:"categoryNames"`
 }
 
-func (o *CreateVocabularyWithCategoriesRequest) IsValid() bool {
+func (o *CreateVocabularyWithCategoriesRequest) Validate() error {
 	if o.Vocabulary.Words == nil || *o.Vocabulary.Words == "" {
-		return false
+		return errors.New("field words mandatory")
 	}
 
-	return true
+	return nil
 }
 
-func (o CreateVocabularyWithCategoriesRequest) MapToEntity() *VocabularyEntity.Vocabulary {
+func (o *CreateVocabularyWithCategoriesRequest) MapToEntity() *VocabularyEntity.Vocabulary {
 	return &VocabularyEntity.Vocabulary{
 		Words:        o.Vocabulary.Words,
 		Translation:  o.Vocabulary.Translation,

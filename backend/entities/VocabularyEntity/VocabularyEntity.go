@@ -28,22 +28,25 @@ type Entity struct {
 	Repository VocabularyRepository
 }
 
-func (o Entity) Create(vocabulary *Vocabulary) (*Vocabulary, error) {
+func (o Entity) CreateWithCategories(vocabulary *Vocabulary, categoryNames []string) (*Vocabulary, error) {
 	newVocabulary, err := o.Repository.CreateVocabulary(vocabulary)
 	if err != nil {
-		logger.LogInfo("Vocabulary couldn't be created")
 		return nil, err
 	}
-	return newVocabulary, err
-}
 
-func (o Entity) CreateWithCategories(vocabulary *Vocabulary, categories []string) (*Vocabulary, error) {
-	newVocabulary, err := o.Repository.CreateVocabularyWithCategories(vocabulary, categories)
-	if err != nil {
-		logger.LogInfo("Vocabulary couldn't be created")
-		return nil, err
+	for _, categoryName := range categoryNames {
+		category, err := o.Repository.CreateCategoryIfNotExist(categoryName)
+		if err != nil {
+			return nil, err
+		}
+
+		newVocabulary, err = o.Repository.AssociateCategoryToVocabulary(newVocabulary, category)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return newVocabulary, err
+
+	return newVocabulary, nil
 }
 
 func (o Entity) GetAllVocabulariesWithCategories() ([]Vocabulary, error) {
@@ -68,11 +71,6 @@ func (o Entity) GetAllCategories() []Category {
 	return categories
 }
 
-func (o Entity) Update(vocabulary *Vocabulary) (*Vocabulary, error) {
-	updatedVocabulary, _ := o.Repository.UpdateVocabulary(vocabulary)
-	return updatedVocabulary, nil
-}
-
 func (o Entity) Delete(id uint) error {
 	if err := o.Repository.DeleteVocabularyById(id); err != nil {
 		return err
@@ -80,7 +78,7 @@ func (o Entity) Delete(id uint) error {
 	return nil
 }
 
-func (o Entity) UpdateWithCategories(vocabulary *Vocabulary, categories []string) (*Vocabulary, error) {
+func (o Entity) UpdateWithCategories(vocabulary *Vocabulary, categoryNames []string) (*Vocabulary, error) {
 	updatedVocabulary, err := o.Repository.UpdateVocabulary(vocabulary)
 	if err != nil {
 		return nil, err
@@ -91,7 +89,7 @@ func (o Entity) UpdateWithCategories(vocabulary *Vocabulary, categories []string
 		return nil, err
 	}
 
-	for _, categoryName := range categories {
+	for _, categoryName := range categoryNames {
 		category, err := o.Repository.CreateCategoryIfNotExist(categoryName)
 		if err != nil {
 			return nil, err

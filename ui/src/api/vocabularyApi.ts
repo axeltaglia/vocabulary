@@ -5,12 +5,6 @@ export const VocabularyApi = {
     getVocabularies: function() {
         return api.post<Vocabulary[]>("/getVocabularies");
     },
-    createVocabulary: function(payload: Vocabulary) {
-        return api.post<Vocabulary>("/createVocabulary", payload);
-    },
-    updateVocabulary: function(payload: Vocabulary) {
-        return api.post("/updateVocabulary/" + payload.id, payload)
-    },
     updateVocabularyWithCategories: function(payload: VocabularyWithCategoriesRequest) {
         return api.post<VocabularyWithCategoriesRequest>("/updateVocabularyWithCategories", payload);
     },
