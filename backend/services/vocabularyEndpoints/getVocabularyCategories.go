@@ -17,7 +17,7 @@ func (o *Endpoints) getVocabularyCategories(c *gin.Context, vocabularyEntity Voc
 
 	entityCategories, err := vocabularyEntity.GetCategoriesFromVocabulary(uint(id))
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

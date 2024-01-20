@@ -69,12 +69,10 @@ export default function VocabularyList() {
     ];
 
     const handleWordsClick = async (id: number) => {
-        await getVocabularyCategories(id)
         openUpdateVocabularyDialog(id)
     }
 
     const handleEdit = async (id: number) => {
-        await getVocabularyCategories(id)
         openUpdateVocabularyDialog(id)
     };
 

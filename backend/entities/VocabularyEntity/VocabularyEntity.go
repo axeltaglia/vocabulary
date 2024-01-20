@@ -56,21 +56,11 @@ func (o Entity) GetAllVocabulariesWithCategories() ([]Vocabulary, error) {
 }
 
 func (o Entity) GetVocabulary(id uint) (*Vocabulary, error) {
-	vocabulary, err := o.Repository.FindVocabularyById(id)
-	if err != nil {
-		logger.LogError("GetVocabulary has failed", err)
-		return nil, err
-	}
-	return vocabulary, nil
+	return o.Repository.FindVocabularyById(id)
 }
 
-func (o Entity) GetCategoriesFromVocabulary(id uint) ([]Category, error) {
-	vocabulary, err := o.Repository.FindVocabularyById(id)
-	if err != nil {
-		logger.LogError("GetVocabulary has failed", err)
-		return nil, err
-	}
-	return vocabulary.Categories, err
+func (o Entity) GetCategoriesFromVocabulary(vocabularyId uint) ([]Category, error) {
+	return o.Repository.FindCategoriesByVocabularyId(vocabularyId)
 }
 
 func (o Entity) GetAllCategories() []Category {

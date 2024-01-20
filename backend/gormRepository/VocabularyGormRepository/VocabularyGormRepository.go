@@ -124,7 +124,9 @@ func (o Repository) DeleteVocabularyById(id uint) error {
 
 func (o Repository) GetAllVocabulariesWithCategories() ([]VocabularyEntity.Vocabulary, error) {
 	var dbVocabularies []Vocabulary
-	if err := o.tx.Model(&Vocabulary{}).Order("created_at desc").Preload("Categories").Find(&dbVocabularies).Error; err != nil {
+	if err := o.tx.Model(&Vocabulary{}).Order("created_at desc").Preload("Categories", func(db *gorm.DB) *gorm.DB {
+		return db.Order("categories.name desc")
+	}).Find(&dbVocabularies).Error; err != nil {
 		logger.LogError(err.Error(), err)
 		return nil, err
 	}
@@ -137,7 +139,9 @@ func (o Repository) GetAllVocabulariesWithCategories() ([]VocabularyEntity.Vocab
 
 func (o Repository) FindVocabularyById(id uint) (*VocabularyEntity.Vocabulary, error) {
 	var dbVocabulary Vocabulary
-	err := o.tx.Model(&Vocabulary{}).Preload("Categories").First(&dbVocabulary, id).Error
+	err := o.tx.Model(&Vocabulary{}).Preload("Categories", func(db *gorm.DB) *gorm.DB {
+		return db.Order("categories.name desc")
+	}).First(&dbVocabulary, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// Handle record not found error...
 	}
@@ -149,6 +153,20 @@ func (o Repository) FindCategories() []VocabularyEntity.Category {
 	var dbCategories []*Category
 	o.tx.Order("created_at DESC").Find(&dbCategories)
 	return mapDbCategoriesToCategories(dbCategories)
+}
+
+func (o Repository) FindCategoriesByVocabularyId(vocabularyId uint) ([]VocabularyEntity.Category, error) {
+	var vocabulary Vocabulary
+
+	if err := o.tx.Preload("Categories", func(db *gorm.DB) *gorm.DB {
+		return db.Order("categories.created_at asc")
+	}).First(&vocabulary, vocabularyId).Error; err != nil {
+		logger.LogError("[Gorm Repository] An error happened when trying to retrieve Categories from a Vocabulary.", err)
+		return nil, err
+	}
+
+	gormCategories := vocabulary.Categories
+	return mapDbCategoriesToCategories(gormCategories), nil
 }
 
 func mapDbVocabularyToVocabulary(dbVocabulary Vocabulary) VocabularyEntity.Vocabulary {
