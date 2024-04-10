@@ -1,9 +1,12 @@
 package vocabularyEndpoints
 
 import (
-	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	_ "github.com/go-playground/validator/v10"
 	"net/http"
+	"strings"
 	"vocabulary/entities/VocabularyEntity"
 	"vocabulary/logger"
 )
@@ -16,14 +19,14 @@ func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, vocabularyEnt
 	}
 
 	if err := request.Validate(); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
 	vocabulary, err := vocabularyEntity.CreateWithCategories(request.MapToEntity(), request.CategoryNames)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		logger.LogInfo("vocabulary/createVocabulary has failed")
+		logger.GetLogger().LogInfo("vocabulary/createVocabulary has failed")
 		return
 	}
 
@@ -33,15 +36,38 @@ func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, vocabularyEnt
 }
 
 type CreateVocabularyWithCategoriesRequest struct {
-	Vocabulary    Vocabulary `json:"vocabulary"`
-	CategoryNames []string   `json:"categoryNames"`
+	Vocabulary    Vocabulary `json:"vocabulary" validate:"required"`
+	CategoryNames []string   `json:"categoryNames" validate:"dive"`
 }
 
-func (o *CreateVocabularyWithCategoriesRequest) Validate() error {
-	if o.Vocabulary.Words == nil || *o.Vocabulary.Words == "" {
-		return errors.New("field words mandatory")
+func (o *CreateVocabularyWithCategoriesRequest) Validate() *string {
+	v := validator.New()
+
+	if err := v.Struct(o); err != nil {
+		errMsg := ""
+		for _, e := range err.(validator.ValidationErrors) {
+			errMsg += fmt.Sprintf("Field %s failed validation with tag %s. Custom message: %s\n", e.Field(), e.Tag(), e.Param()) + ". "
+		}
+		return &errMsg
 	}
 
+	if err := o.ValidateCategories(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *CreateVocabularyWithCategoriesRequest) ValidateCategories() *string {
+	var categoryNamesTrimed []string
+	for _, category := range o.CategoryNames {
+		if len(category) < 30 {
+			errMessage := "There is at least one category with more than 30 characters length."
+			return &errMessage
+		}
+		categoryNamesTrimed = append(categoryNamesTrimed, strings.TrimSpace(category))
+	}
+	o.CategoryNames = categoryNamesTrimed
 	return nil
 }
 

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"runtime/debug"
+	"strconv"
 	"time"
 	"vocabulary/entities"
 	"vocabulary/entities/VocabularyEntity"
@@ -97,14 +97,16 @@ func loggerMiddleware() gin.HandlerFunc {
 		statusCode := c.Writer.Status()
 		errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
 
-		logger.Log().WithFields(logrus.Fields{
-			"status":    statusCode,
-			"latency":   latency,
+		data := map[string]interface{}{
+			"status":    strconv.FormatInt(int64(statusCode), 10),
+			"latency":   strconv.FormatInt(int64(latency), 10),
 			"client_ip": clientIP,
 			"method":    method,
 			"path":      path,
 			"raw_query": raw,
 			"error":     errorMessage,
-		}).Info("Request handled")
+		}
+
+		logger.GetLogger().LogWithFields(data)
 	}
 }

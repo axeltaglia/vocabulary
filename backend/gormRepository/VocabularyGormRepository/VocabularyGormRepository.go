@@ -36,7 +36,7 @@ func (o Repository) CreateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
 
 	if err := o.tx.Create(&gormVocabulary).Error; err != nil {
-		logger.LogError("DB: Vocabulary couldn't be created", err)
+		logger.GetLogger().LogError("DB: Vocabulary couldn't be created", err)
 		return nil, err
 	}
 	vocabulary.Id = gormVocabulary.Id
@@ -73,7 +73,7 @@ func (o Repository) CreateVocabularyWithCategories(vocabulary *VocabularyEntity.
 func (o Repository) UpdateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*VocabularyEntity.Vocabulary, error) {
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
 	if err := o.tx.Save(gormVocabulary).Error; err != nil {
-		logger.LogError("[Gorm Repository] Vocabulary couldn't be updated", err)
+		logger.GetLogger().LogError("[Gorm Repository] Vocabulary couldn't be updated", err)
 		return nil, err
 	}
 
@@ -84,7 +84,7 @@ func (o Repository) UpdateVocabulary(vocabulary *VocabularyEntity.Vocabulary) (*
 func (o Repository) DisassociateCategoriesFromVocabulary(vocabulary *VocabularyEntity.Vocabulary) error {
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
 	if err := o.tx.Model(gormVocabulary).Association("Categories").Clear().Error; err != nil {
-		logger.LogError("[Gorm Repository] Categories couldn't be disassociated to Vocabulary", err)
+		logger.GetLogger().LogError("[Gorm Repository] Categories couldn't be disassociated to Vocabulary", err)
 		return err
 	}
 	return nil
@@ -94,7 +94,7 @@ func (o Repository) AssociateCategoryToVocabulary(vocabulary *VocabularyEntity.V
 	gormVocabulary := mapVocabularyToDbVocabulary(vocabulary)
 	gormCategory := mapCategoryToDbCategory(category)
 	if err := o.tx.Model(gormVocabulary).Association("Categories").Append(gormCategory).Error; err != nil {
-		logger.LogError("[Gorm Repository] Category couldn't be associated to Vocabulary", err)
+		logger.GetLogger().LogError("[Gorm Repository] Category couldn't be associated to Vocabulary", err)
 		return nil, err
 	}
 
@@ -107,7 +107,7 @@ func (o Repository) CreateCategoryIfNotExist(categoryName string) (*VocabularyEn
 	if err := o.tx.Where("name = ?", categoryName).First(&dbCategory).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		dbCategory = Category{Name: &categoryName}
 		if err := o.tx.Create(&dbCategory).Error; err != nil {
-			logger.LogError("[Gorm Repository] Category couldn't be created", err)
+			logger.GetLogger().LogError("[Gorm Repository] Category couldn't be created", err)
 			return nil, err
 		}
 	}
@@ -116,7 +116,7 @@ func (o Repository) CreateCategoryIfNotExist(categoryName string) (*VocabularyEn
 
 func (o Repository) DeleteVocabularyById(id uint) error {
 	if err := o.tx.Delete(&Vocabulary{}, id).Error; err != nil {
-		logger.LogError(fmt.Sprintf("[Gorm Repository] Couldn't delete Vocabulary from id %d", id), err)
+		logger.GetLogger().LogError(fmt.Sprintf("[Gorm Repository] Couldn't delete Vocabulary from id %d", id), err)
 		return err
 	}
 	return nil
@@ -127,7 +127,7 @@ func (o Repository) GetAllVocabulariesWithCategories() ([]VocabularyEntity.Vocab
 	if err := o.tx.Model(&Vocabulary{}).Order("created_at desc").Preload("Categories", func(db *gorm.DB) *gorm.DB {
 		return db.Order("categories.name desc")
 	}).Find(&dbVocabularies).Error; err != nil {
-		logger.LogError(err.Error(), err)
+		logger.GetLogger().LogError(err.Error(), err)
 		return nil, err
 	}
 
@@ -161,7 +161,7 @@ func (o Repository) FindCategoriesByVocabularyId(vocabularyId uint) ([]Vocabular
 	if err := o.tx.Preload("Categories", func(db *gorm.DB) *gorm.DB {
 		return db.Order("categories.created_at asc")
 	}).First(&vocabulary, vocabularyId).Error; err != nil {
-		logger.LogError("[Gorm Repository] An error happened when trying to retrieve Categories from a Vocabulary.", err)
+		logger.GetLogger().LogError("[Gorm Repository] An error happened when trying to retrieve Categories from a Vocabulary.", err)
 		return nil, err
 	}
 

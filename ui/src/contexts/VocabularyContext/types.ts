@@ -1,24 +1,3 @@
-export type Vocabulary = {
-    id?: number
-    words: string
-    translation: string
-    usedInPhrase: string
-    explanation: string
-    categories: Category[]
-}
-export type Category = {
-    id?: number
-    name: string
-}
-export type VocabularyCategory = {
-    id?: number
-    categories: Category[]
-}
-
-export type VocabularyWithCategoriesRequest = {
-    vocabulary: Vocabulary
-    categoryNames: string[]
-}
 export type VocabularyState = {
     vocabularies: Vocabulary[]
     createVocabularyDialogVisible: boolean
@@ -29,6 +8,31 @@ export type VocabularyState = {
     categories: Category[]
     loading: boolean
 }
+
+export type Vocabulary = {
+    id?: number
+    words: string
+    translation: string
+    usedInPhrase: string
+    explanation: string
+    categories: Category[]
+}
+
+export type Category = {
+    id?: number
+    name: string
+}
+
+export type VocabularyCategory = {
+    id?: number
+    categories: Category[]
+}
+
+export type VocabularyWithCategoriesRequest = {
+    vocabulary: Vocabulary
+    categoryNames: string[]
+}
+
 export type VocabularyContextProps = {
     state: VocabularyState,
     getVocabularies: () => Promise<void>

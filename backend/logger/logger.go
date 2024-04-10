@@ -1,69 +1,24 @@
 package logger
 
-import (
-	"fmt"
-	"github.com/sirupsen/logrus"
-	"os"
-	"runtime"
-	"runtime/debug"
-	"strings"
-	"time"
-)
+import "errors"
 
-var log = logrus.New()
-
-func InitLogger() {
-	log.Out = os.Stdout
-	//log.SetFormatter(&logrus.JSONFormatter{})
-	log.SetFormatter(&logrus.TextFormatter{
-		DisableColors: false,
-		FullTimestamp: true,
-	})
-	//file, err := os.OpenFile("logrus.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	//if err == nil {
-	//	log.Out = file
-	//} else {
-	//	log.Info("Failed to log to file, using default stderr")
-	//}
+type Logger interface {
+	Init()
+	LogError(msg string, err error)
+	LogInfo(msg string)
+	LogWithFields(fields map[string]interface{})
 }
 
-func Log() *logrus.Logger {
-	return log
+var LogInstance Logger
+
+func InitializeLogger(logger Logger) {
+	LogInstance = logger
+	LogInstance.Init()
 }
 
-// LogError logs an error message along with structured information
-func LogError(msg string, err error) {
-	_, file, line, _ := runtime.Caller(1)
-	fileParts := strings.Split(file, "/")
-	fileName := fileParts[len(fileParts)-1]
-
-	log.WithFields(logrus.Fields{
-		"timestamp": time.Now().Format(time.RFC3339),
-		"level":     "error",
-		"message":   msg,
-		"error":     err.Error(),
-		"file":      fileName,
-		"line":      line,
-	}).Error("Error occurred")
-	log.Error(getStackTrace(err))
-}
-
-// LogInfo logs an info message along with structured information
-func LogInfo(msg string) {
-	_, file, line, _ := runtime.Caller(1)
-	fileParts := strings.Split(file, "/")
-	fileName := fileParts[len(fileParts)-1]
-
-	log.WithFields(logrus.Fields{
-		"timestamp": time.Now().Format(time.RFC3339),
-		"level":     "info",
-		"message":   msg,
-		"file":      fileName,
-		"line":      line,
-	}).Info("Info message")
-}
-
-func getStackTrace(err error) string {
-	stackTrace := string(debug.Stack())
-	return fmt.Sprintf("%v\n%s\n", err.Error(), stackTrace)
+func GetLogger() Logger {
+	if LogInstance == nil {
+		panic(errors.New("logger has not been initialized. Please call InitializeLogger() first"))
+	}
+	return LogInstance
 }

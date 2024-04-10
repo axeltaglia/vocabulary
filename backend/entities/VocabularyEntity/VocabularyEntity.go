@@ -52,7 +52,7 @@ func (o Entity) CreateWithCategories(vocabulary *Vocabulary, categoryNames []str
 func (o Entity) GetAllVocabulariesWithCategories() ([]Vocabulary, error) {
 	vocabularies, err := o.Repository.GetAllVocabulariesWithCategories()
 	if err != nil {
-		logger.LogError("GetAllVocabulariesWithCategories has failed", err)
+		logger.GetLogger().LogError("GetAllVocabulariesWithCategories has failed", err)
 		return nil, err
 	}
 	return vocabularies, nil

@@ -4,7 +4,7 @@ import "vocabulary/entities/VocabularyEntity"
 
 type Vocabulary struct {
 	Id           *uint      `json:"id"`
-	Words        *string    `json:"words"`
+	Words        *string    `json:"words" validate:"required,min=1"`
 	Translation  *string    `json:"translation"`
 	UsedInPhrase *string    `json:"usedInPhrase"`
 	Explanation  *string    `json:"explanation"`

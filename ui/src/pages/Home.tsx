@@ -1,4 +1,4 @@
-import React, {useEffect} from "react"
+import React from "react"
 import {Box, Button, Typography} from "@mui/material"
 import Toolbar from "@mui/material/Toolbar"
 import TopNavBar from "../layout/TopNavBar";
@@ -17,19 +17,13 @@ function Home() {
         openCreateVocabularyDialog
     } = useVocabulary()
 
-    useEffect(() => {
-        getVocabularies()
-            .then(() => {
-            })
-        getCategories()
-            .then(() => {
-            })
-    }, [])
-
-
-
     const handleNewVocabularyButtonClick = () => {
         openCreateVocabularyDialog()
+    }
+
+    const handleLoadVocabulariesButtonClick = () => {
+        getVocabularies();
+        getCategories();
     }
 
     return <>
@@ -42,6 +36,8 @@ function Home() {
                 >
                 <Button variant="contained" color="success" startIcon={<AddCircle />}
                         onClick={handleNewVocabularyButtonClick}>NEW VOCABULARY</Button>
+                    <Button variant="contained" color="success" startIcon={<AddCircle />}
+                            onClick={handleLoadVocabulariesButtonClick}>Load</Button>
                 </Box>
                 { vocabularies.length > 0 ?
                         <VocabularyList />
