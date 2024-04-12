@@ -5,8 +5,8 @@ WORKDIR /app
 COPY go.* ./
 COPY . .
 
-RUN go get ./main/
-RUN go build -o bin ./main/
+RUN go get ./main/apiApp/
+RUN go build -o bin ./main/apiApp/
 
 CMD [ "/app/bin" ]
 
