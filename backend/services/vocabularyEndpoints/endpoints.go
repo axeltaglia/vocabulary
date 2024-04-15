@@ -2,11 +2,13 @@ package vocabularyEndpoints
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 	"vocabulary/entities"
 	"vocabulary/entities/VocabularyEntity"
@@ -72,6 +74,7 @@ func getGinRouter() *gin.Engine {
 	router := gin.Default()
 	router.Use(corsMiddleware())
 	router.Use(loggerMiddleware())
+	router.Use(authenticatedMiddleware())
 	return router
 }
 
@@ -108,5 +111,45 @@ func loggerMiddleware() gin.HandlerFunc {
 		}
 
 		logger.GetLogger().LogWithFields(data)
+	}
+}
+
+func authenticatedMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+			c.Abort()
+			return
+		}
+
+		// Extract the token from the Authorization header
+		parts := strings.Split(tokenString, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+			c.Abort()
+			return
+		}
+
+		// Parse the JWT token
+		token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
+			// Validate the signing method here
+			return []byte("your-secret-key"), nil // Replace "your-secret-key" with your actual secret key
+		})
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to parse token"})
+			c.Abort()
+			return
+		}
+
+		// Check if the token is valid
+		if !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		// If the token is valid, continue with the next middleware
+		c.Next()
 	}
 }
