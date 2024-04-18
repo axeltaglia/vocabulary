@@ -3,16 +3,13 @@ package vocabularyEndpoints
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 	"vocabulary/entities/VocabularyEntity"
 )
 
-func (o *Endpoints) getVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
-	strId := c.Params.ByName("id")
-	id, err := strconv.ParseUint(strId, 10, 32)
+func (o *Endpoints) getVocabulary(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) error {
+	id, err := getIdFromRequest(c)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
-		return
+		return err
 	}
 
 	vocabulary, err := vocabularyEntity.GetVocabulary(uint(id))
@@ -21,6 +18,7 @@ func (o *Endpoints) getVocabulary(c *gin.Context, vocabularyEntity VocabularyEnt
 	response.MapFromEntity(vocabulary)
 
 	c.JSON(http.StatusOK, response)
+	return nil
 }
 
 type GetVocabularyResponse struct {

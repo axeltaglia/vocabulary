@@ -1,6 +1,7 @@
 package vocabularyEndpoints
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -8,31 +9,39 @@ import (
 	"net/http"
 	"strings"
 	"vocabulary/entities/VocabularyEntity"
-	"vocabulary/logger"
 )
 
-func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
+func (o *Endpoints) createVocabularyWithCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) error {
 	var request CreateVocabularyWithCategoriesRequest
 	if err := c.BindJSON(&request); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		return APIError{
+			Msg:         "Invalid request format",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
 	}
 
 	if err := request.Validate(); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
-		return
+		return APIError{
+			Msg:         "Invalid request format",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
 	}
 
 	vocabulary, err := vocabularyEntity.CreateWithCategories(request.MapToEntity(), request.CategoryNames)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		logger.GetLogger().LogInfo("vocabulary/createVocabulary has failed")
-		return
+		return APIError{
+			Msg:         "Invalid request format",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
 	}
 
 	var createVocabularyResponse CreateVocabularyWithCategoriesResponse
 	createVocabularyResponse.MapFromEntity(vocabulary)
 	c.JSON(http.StatusCreated, createVocabularyResponse)
+	return nil
 }
 
 type CreateVocabularyWithCategoriesRequest struct {
@@ -40,7 +49,7 @@ type CreateVocabularyWithCategoriesRequest struct {
 	CategoryNames []string   `json:"categoryNames" validate:"dive"`
 }
 
-func (o *CreateVocabularyWithCategoriesRequest) Validate() *string {
+func (o *CreateVocabularyWithCategoriesRequest) Validate() error {
 	v := validator.New()
 
 	if err := v.Struct(o); err != nil {
@@ -48,7 +57,7 @@ func (o *CreateVocabularyWithCategoriesRequest) Validate() *string {
 		for _, e := range err.(validator.ValidationErrors) {
 			errMsg += fmt.Sprintf("Field %s failed validation with tag %s. Custom message: %s\n", e.Field(), e.Tag(), e.Param()) + ". "
 		}
-		return &errMsg
+		return errors.New(errMsg)
 	}
 
 	if err := o.ValidateCategories(); err != nil {
@@ -58,12 +67,12 @@ func (o *CreateVocabularyWithCategoriesRequest) Validate() *string {
 	return nil
 }
 
-func (o *CreateVocabularyWithCategoriesRequest) ValidateCategories() *string {
+func (o *CreateVocabularyWithCategoriesRequest) ValidateCategories() error {
 	var categoryNamesTrimed []string
 	for _, category := range o.CategoryNames {
 		if len(category) < 30 {
-			errMessage := "There is at least one category with more than 30 characters length."
-			return &errMessage
+			errMessage := "there is at least one category with more than 30 characters length"
+			return errors.New(errMessage)
 		}
 		categoryNamesTrimed = append(categoryNamesTrimed, strings.TrimSpace(category))
 	}

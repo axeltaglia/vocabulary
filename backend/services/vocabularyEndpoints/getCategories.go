@@ -6,13 +6,14 @@ import (
 	"vocabulary/entities/VocabularyEntity"
 )
 
-func (o *Endpoints) getCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
+func (o *Endpoints) getCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) error {
 	entityCategories := vocabularyEntity.GetAllCategories()
 
 	var getCategoriesResponse GetCategoriesResponse
 	getCategoriesResponse.MapFromEntities(entityCategories)
 
 	c.JSON(http.StatusOK, getCategoriesResponse.Categories)
+	return nil
 }
 
 type GetCategoriesResponse struct {

@@ -2,17 +2,16 @@ package main
 
 import (
 	"os"
-
 	"vocabulary/gormRepository"
 	"vocabulary/logger"
-	"vocabulary/logrusLogger"
 	"vocabulary/main/util"
 	"vocabulary/services/vocabularyEndpoints"
+	"vocabulary/slogJsonLogger"
 )
 
 func main() {
 	// Initialize logger
-	logger.InitializeLogger(&logrusLogger.LogrusLogger{})
+	logger.InitializeLogger(&slogJsonLogger.SlogJsonLogger{})
 
 	// Load configuration
 	config, err := util.LoadConfig("conf.json")
@@ -35,5 +34,8 @@ func main() {
 	endpoints := vocabularyEndpoints.NewEndpoints(txRepositoryHandler)
 
 	// Start server
-	endpoints.ListenAndServe(config.ApiPort)
+	if err := endpoints.ListenAndServe(config.ApiPort); err != nil {
+		logger.GetLogger().LogError("server coundn't start", err)
+		os.Exit(1)
+	}
 }

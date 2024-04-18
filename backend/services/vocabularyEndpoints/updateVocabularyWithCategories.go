@@ -6,22 +6,29 @@ import (
 	"vocabulary/entities/VocabularyEntity"
 )
 
-func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
+func (o *Endpoints) updateVocabularyWithCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) error {
 	var requestData VocabularyWithCategoriesRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		return APIError{
+			Msg:         "Error",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
 	}
 
 	vocabulary, err := vocabularyEntity.UpdateWithCategories(requestData.Vocabulary.MapToEntity(), requestData.CategoryNames)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return APIError{
+			Msg:         "Error",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
 	}
 
 	var response UpdateVocabularyWithCategoriesResponse
 	response.MapFromEntity(vocabulary)
 	c.JSON(http.StatusOK, response)
+	return nil
 }
 
 type VocabularyWithCategoriesRequest struct {

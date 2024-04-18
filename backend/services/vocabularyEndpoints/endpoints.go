@@ -30,7 +30,9 @@ func (o *Endpoints) handle() {
 	o.handleTxWithVocabularyEntity("/getCategories", o.getCategories)
 }
 
-func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *gin.Context, vocabularyEntity VocabularyEntity.Entity)) {
+type apiFunc func(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) error
+
+func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f apiFunc) {
 	o.router.POST(relativePath, func(c *gin.Context) {
 		txRepositoryFactory := o.txRepositoryHandler.GetTxRepositoryFactory()
 
@@ -44,7 +46,12 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 
 		vocabularyRepository := txRepositoryFactory.GetVocabularyRepository()
 		vocabularyEntity := VocabularyEntity.New(vocabularyRepository)
-		f(c, vocabularyEntity)
+		if err := f(c, vocabularyEntity); err != nil {
+			if e, ok := err.(APIError); ok {
+				logger.GetLogger().LogError(e.Error(), e)
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+			}
+		}
 
 		if txRepositoryFactory.TransactionError() != nil {
 			txRepositoryFactory.RollbackTransaction()
@@ -54,27 +61,49 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f func(c *
 	})
 }
 
-func (o *Endpoints) ListenAndServe(apiPort string) {
+func (o *Endpoints) ListenAndServe(apiPort string) error {
 	o.handle()
-	err := http.ListenAndServe(":"+apiPort, o.router)
-	if err != nil {
-		panic(err)
+	if err := http.ListenAndServe(":"+apiPort, o.router); err != nil {
+		return err
 	}
+	return nil
 }
 
 func NewEndpoints(txRepositoryHandler entities.TxRepositoryHandler) *Endpoints {
 	router := getGinRouter()
-	return &Endpoints{
+	endpoints := new(Endpoints)
+	endpoints.router = router
+	endpoints.txRepositoryHandler = txRepositoryHandler
+	return endpoints
+	/*return &Endpoints{
 		router:              router,
 		txRepositoryHandler: txRepositoryHandler,
 	}
+
+	*/
+}
+
+func getIdFromRequest(c *gin.Context) (uint, error) {
+	strId := c.Params.ByName("id")
+	id, err := strconv.ParseUint(strId, 10, 64)
+	if err != nil {
+		return uint(id), APIError{
+			Msg:         "Invalid request format",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
+	}
+	return uint(id), nil
 }
 
 func getGinRouter() *gin.Engine {
 	router := gin.Default()
+	//l := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	//slogLogger := logger.GetLogger()
+	//router.Use(sloggin.New(l))
 	router.Use(corsMiddleware())
 	router.Use(loggerMiddleware())
-	router.Use(authenticatedMiddleware())
+	//router.Use(authenticatedMiddleware())
 	return router
 }
 

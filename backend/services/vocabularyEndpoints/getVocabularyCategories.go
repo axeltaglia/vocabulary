@@ -7,24 +7,33 @@ import (
 	"vocabulary/entities/VocabularyEntity"
 )
 
-func (o *Endpoints) getVocabularyCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) {
+func (o *Endpoints) getVocabularyCategories(c *gin.Context, vocabularyEntity VocabularyEntity.Entity) error {
 	strId := c.Params.ByName("id")
 	id, err := strconv.ParseUint(strId, 10, 32)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
-		return
+		return APIError{
+			Msg:         "Invalid request format",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
 	}
 
 	entityCategories, err := vocabularyEntity.GetCategoriesFromVocabulary(uint(id))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		return APIError{
+			Msg:         "Error",
+			Status:      http.StatusBadRequest,
+			originalErr: err,
+		}
 	}
 
 	var getVocabularyCategoriesResponse GetVocabularyCategoriesResponse
 	getVocabularyCategoriesResponse.MapFromEntities(entityCategories)
 
 	c.JSON(http.StatusOK, getVocabularyCategoriesResponse.Categories)
+
+	return nil
 }
 
 type GetVocabularyCategoriesResponse struct {
