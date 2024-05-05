@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	_ "github.com/lib/pq"
 	"time"
 	"vocabulary/logger"
 )
@@ -11,6 +12,7 @@ import (
 type DbConfig struct {
 	Host     string
 	Port     string
+	User     string
 	DbName   string
 	Password string
 }
@@ -34,7 +36,7 @@ func ConnectToDbWithMaxAttempts(dbConfig DbConfig, maxAttempts int) (*sql.DB, er
 }
 
 func connectToDb(dbConfig DbConfig) (*sql.DB, bool) {
-	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%s dbname=%s password=%s sslmode=disabled", dbConfig.Host, dbConfig.Port, dbConfig.DbName, dbConfig.Password))
+	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.DbName, dbConfig.Password))
 	if err != nil {
 		logger.GetLogger().LogInfo("couldn't connect to the db")
 		return nil, false

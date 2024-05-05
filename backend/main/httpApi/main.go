@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"os"
-	"vocabulary/gormRepository"
 	"vocabulary/logger"
 	"vocabulary/main/util"
-	"vocabulary/services/vocabularyEndpoints"
 	"vocabulary/slogJsonLogger"
+	"vocabulary/sqlRepository"
 )
 
 func main() {
@@ -21,9 +21,10 @@ func main() {
 	}
 
 	// Connect to the database
-	db, err := gormRepository.ConnectToDbWithMaxAttempts(gormRepository.DbConfig{
+	db, err := sqlRepository.ConnectToDbWithMaxAttempts(sqlRepository.DbConfig{
 		Host:     config.DbConfig.Host,
 		Port:     config.DbConfig.Port,
+		User:     config.DbConfig.User,
 		DbName:   config.DbConfig.DbName,
 		Password: config.DbConfig.Password,
 	}, 5)
@@ -33,13 +34,15 @@ func main() {
 	}
 
 	// Initialize GormTxRepositoryHandler
-	txRepositoryHandler := gormRepository.NewGormTxRepositoryHandler(db)
+	txRepositoryHandler := sqlRepository.NewSqlTxRepositoryHandler(db)
 
-	// Initialize endpoints
-	endpoints := vocabularyEndpoints.NewEndpoints(txRepositoryHandler)
+	apiServer := NewApiServer(":8080", &txRepositoryHandler)
 
-	// Start server
-	if err := endpoints.ListenAndServe(config.ApiPort); err != nil {
+	apiServer.HandleEndpoints()
+
+	fmt.Printf("Server started. Listening in port %s\n", config.DbConfig.Port)
+
+	if err := apiServer.ListenAndServe(); err != nil {
 		logger.GetLogger().LogError("server coundn't start", err)
 		os.Exit(1)
 	}

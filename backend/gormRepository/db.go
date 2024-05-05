@@ -14,7 +14,7 @@ type DbConfig struct {
 	Port     string `json:"port"`
 	User     string `json:"user"`
 	Password string `json:"password"`
-	Database string `json:"database"`
+	DbName   string `json:"dbName"`
 }
 
 func ConnectToDbWithMaxAttempts(dbConfig DbConfig, maxAttempts int) (*gorm.DB, error) {
@@ -38,7 +38,7 @@ func ConnectToDbWithMaxAttempts(dbConfig DbConfig, maxAttempts int) (*gorm.DB, e
 func connectToDb(dbConfig DbConfig) (*gorm.DB, bool) {
 	var db *gorm.DB
 	var err error
-	args := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Database, dbConfig.Password)
+	args := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.DbName, dbConfig.Password)
 	db, err = gorm.Open("postgres", args)
 	if err == nil {
 		return autoMigrateDb(db), true

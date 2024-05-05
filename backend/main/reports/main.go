@@ -6,13 +6,12 @@ import (
 	"vocabulary/entities/VocabularyEntity"
 	"vocabulary/gormRepository"
 	"vocabulary/logger"
-	"vocabulary/logrusLogger"
 	"vocabulary/main/util"
 )
 
 func main() {
 	// Initialize logger
-	logger.InitializeLogger(&logrusLogger.LogrusLogger{})
+	logger.InitializeLogger(&logger.LogrusLogger{})
 
 	// Load configuration
 	config, err := util.LoadConfig("conf.json")
@@ -22,7 +21,12 @@ func main() {
 	}
 
 	// Connect to the database with maximum connection attempts
-	db, err := gormRepository.ConnectToDbWithMaxAttempts(config.DbConfig, 5)
+	db, err := gormRepository.ConnectToDbWithMaxAttempts(gormRepository.DbConfig{
+		Host:     config.DbConfig.Host,
+		Port:     config.DbConfig.Port,
+		DbName:   config.DbConfig.DbName,
+		Password: config.DbConfig.Password,
+	}, 5)
 	if err != nil {
 		logger.GetLogger().LogInfo("DB: Max connection attempts reached. Exiting.")
 		os.Exit(1)

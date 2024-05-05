@@ -4,12 +4,19 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
-	"vocabulary/gormRepository"
 )
 
+type DbConfig struct {
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	DbName   string `json:"dbName"`
+}
+
 type Config struct {
-	ApiPort  string                  `json:"apiPort"`
-	DbConfig gormRepository.DbConfig `json:"dbConfig"`
+	ApiPort  string   `json:"apiPort"`
+	DbConfig DbConfig `json:"dbConfig"`
 }
 
 func LoadConfig(configFileName string) (*Config, error) {
