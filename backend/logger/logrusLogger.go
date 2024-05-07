@@ -1,4 +1,4 @@
-package logrusLogger
+package logger
 
 import (
 	"fmt"

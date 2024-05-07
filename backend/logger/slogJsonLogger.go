@@ -1,10 +1,8 @@
-package slogJsonLogger
+package logger
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
-	"runtime/debug"
 )
 
 type SlogJsonLogger struct {
@@ -32,9 +30,4 @@ func (o *SlogJsonLogger) LogWarn(msg string) {
 
 func (o *SlogJsonLogger) LogWithFields(fields map[string]interface{}) {
 	o.logger.Info("msg", "data", fields)
-}
-
-func getStackTrace(err error) string {
-	stackTrace := string(debug.Stack())
-	return fmt.Sprintf("%v\n%s\n", err.Error(), stackTrace)
 }

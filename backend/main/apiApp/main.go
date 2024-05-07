@@ -6,12 +6,11 @@ import (
 	"vocabulary/logger"
 	"vocabulary/main/util"
 	"vocabulary/services/vocabularyEndpoints"
-	"vocabulary/slogJsonLogger"
 )
 
 func main() {
 	// Initialize logger
-	logger.InitializeLogger(&slogJsonLogger.SlogJsonLogger{})
+	logger.InitializeLogger(&logger.SlogJsonLogger{})
 
 	// Load configuration
 	config, err := util.LoadConfig("conf.json")

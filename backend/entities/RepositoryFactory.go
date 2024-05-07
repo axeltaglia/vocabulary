@@ -13,4 +13,6 @@ type TxRepositoryFactory interface {
 	RollbackTransaction()
 	TransactionError() *string
 	GetVocabularyRepository() VocabularyEntity.VocabularyRepository
+
+	// add more repositories getters, like "GetUserRepository"
 }
