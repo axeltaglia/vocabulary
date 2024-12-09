@@ -44,7 +44,7 @@ func (o *Endpoints) handleTxWithVocabularyEntity(relativePath string, f apiFunc)
 			}
 		}()
 
-		vocabularyRepository := txRepositoryFactory.GetVocabularyRepository()
+		vocabularyRepository := txRepositoryFactory.CreateVocabularyRepository()
 		vocabularyEntity := VocabularyEntity.New(vocabularyRepository)
 		if err := f(c, vocabularyEntity); err != nil {
 			if e, ok := err.(APIError); ok {

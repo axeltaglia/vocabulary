@@ -48,6 +48,6 @@ func (o *SqlTxRepositoryFactory) TransactionError() *string {
 	return &msg
 }
 
-func (o *SqlTxRepositoryFactory) GetVocabularyRepository() VocabularyEntity.VocabularyRepository {
+func (o *SqlTxRepositoryFactory) CreateVocabularyRepository() VocabularyEntity.VocabularyRepository {
 	return NewSqlRepository(o.tx)
 }

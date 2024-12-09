@@ -40,6 +40,6 @@ func (o *GormTxRepositoryFactory) RollbackTransaction() {
 	o.tx.Rollback()
 }
 
-func (o *GormTxRepositoryFactory) GetVocabularyRepository() VocabularyEntity.VocabularyRepository {
+func (o *GormTxRepositoryFactory) CreateVocabularyRepository() VocabularyEntity.VocabularyRepository {
 	return VocabularyGormRepository.New(o.tx)
 }

@@ -36,7 +36,7 @@ func main() {
 	gormTxRepositoryHandler := gormRepository.NewGormTxRepositoryHandler(db)
 
 	// Initialize VocabularyEntity
-	vocabularyRepository := gormTxRepositoryHandler.GetTxRepositoryFactory().GetVocabularyRepository()
+	vocabularyRepository := gormTxRepositoryHandler.GetTxRepositoryFactory().CreateVocabularyRepository()
 	vocabularyEntity := VocabularyEntity.New(vocabularyRepository)
 
 	// Print report

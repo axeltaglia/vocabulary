@@ -12,7 +12,7 @@ type TxRepositoryFactory interface {
 	CommitTransaction()
 	RollbackTransaction()
 	TransactionError() *string
-	GetVocabularyRepository() VocabularyEntity.VocabularyRepository
+	CreateVocabularyRepository() VocabularyEntity.VocabularyRepository
 
-	// add more repositories getters, like "GetUserRepository"
+	// add more repositories getters, like "CreateUserRepository" that creates a "UserEntity.UserRepository"
 }
