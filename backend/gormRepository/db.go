@@ -7,6 +7,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"time"
 	"vocabulary/gormRepository/VocabularyGormRepository"
+	"vocabulary/logger"
 )
 
 type DbConfig struct {
@@ -31,6 +32,7 @@ func ConnectToDbWithMaxAttempts(dbConfig DbConfig, maxAttempts int) (*gorm.DB, e
 		}
 
 		fmt.Println("Retrying in 1 second...")
+		logger.GetLogger().LogInfo(fmt.Sprintf("Attemp: %d. Retrying in 1 second...", attempt))
 		time.Sleep(1 * time.Second)
 	}
 }

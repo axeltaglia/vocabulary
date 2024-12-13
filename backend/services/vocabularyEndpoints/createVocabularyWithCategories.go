@@ -70,7 +70,7 @@ func (o *CreateVocabularyWithCategoriesRequest) Validate() error {
 func (o *CreateVocabularyWithCategoriesRequest) ValidateCategories() error {
 	var categoryNamesTrimed []string
 	for _, category := range o.CategoryNames {
-		if len(category) < 30 {
+		if len(category) > 30 {
 			errMessage := "there is at least one category with more than 30 characters length"
 			return errors.New(errMessage)
 		}

@@ -18,14 +18,14 @@ func main() {
 		logger.GetLogger().LogInfo("Config file error. Exiting.")
 		os.Exit(1)
 	}
-
 	// Connect to the database
 	db, err := gormRepository.ConnectToDbWithMaxAttempts(gormRepository.DbConfig{
 		Host:     config.DbConfig.Host,
 		Port:     config.DbConfig.Port,
 		DbName:   config.DbConfig.DbName,
 		Password: config.DbConfig.Password,
-	}, 5)
+		User:     config.DbConfig.User,
+	}, 50)
 	if err != nil {
 		logger.GetLogger().LogInfo("DB: Max connection attempts reached. Exiting.")
 		os.Exit(1)

@@ -24,7 +24,6 @@ export default function VocabularyProvider({children}: ChildrenType): ReactEleme
     const {alertSuccessMsg, alertErrorMsg} = useGlobal()
 
     const getVocabularies = async () => {
-        console.log("getVocabularies")
         dispatch({type: 'SET_LOADING', payload: true})
         try {
             const vocabularyData: AxiosResponse = await VocabularyApi.getVocabularies()

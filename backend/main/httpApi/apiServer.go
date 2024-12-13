@@ -48,13 +48,6 @@ func interceptCors(httpFunc func(w http.ResponseWriter, r *http.Request)) func(h
 	}
 }
 
-type CreateVocabulary struct {
-	Words       string `json:"words"`
-	Translation string `json:"translation"`
-	UseInPhrase string `json:"useInPhrase"`
-	Explanation string `json:"explanation"`
-}
-
 func (o *ApiServer) makeHttpFunc(f func(http.ResponseWriter, *http.Request, VocabularyEntity.Entity) error) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		txRepositoryFactory := o.TxRepositoryHandler.GetTxRepositoryFactory()

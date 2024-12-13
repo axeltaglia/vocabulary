@@ -17,12 +17,10 @@ services:
       POSTGRES_USER: vocabulary
       POSTGRES_PASSWORD: vocabulary
       POSTGRES_DB: vocabulary
-      DATABASE_HOST: postgres
-      PGPORT: 5435
     volumes:
       - ./dbData:/var/lib/postgresql/data
     ports:
-      - "5435:5435"
+      - "5435:5432"
 
   ui:
     build:
