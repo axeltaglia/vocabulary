@@ -26,6 +26,7 @@ func main() {
 		Port:     config.DbConfig.Port,
 		DbName:   config.DbConfig.DbName,
 		Password: config.DbConfig.Password,
+		User:     config.DbConfig.User,
 	}, 5)
 	if err != nil {
 		logger.GetLogger().LogInfo("DB: Max connection attempts reached. Exiting.")
